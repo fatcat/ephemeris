@@ -1,0 +1,28 @@
+[
+  { "name": "Africa", "lat": 2, "lon": 22, "type": "continent" },
+  { "name": "Antarctica", "lat": -82, "lon": 0, "type": "continent" },
+  { "name": "Asia", "lat": 45, "lon": 90, "type": "continent" },
+  { "name": "Australia", "lat": -25, "lon": 135, "type": "continent" },
+  { "name": "Europe", "lat": 50, "lon": 15, "type": "continent" },
+  { "name": "North America", "lat": 45, "lon": -100, "type": "continent" },
+  { "name": "South America", "lat": -15, "lon": -58, "type": "continent" },
+
+  { "name": "Pacific Ocean", "lat": 0, "lon": -160, "type": "ocean" },
+  { "name": "Atlantic Ocean", "lat": 0, "lon": -30, "type": "ocean" },
+  { "name": "Indian Ocean", "lat": -20, "lon": 75, "type": "ocean" },
+  { "name": "Southern Ocean", "lat": -65, "lon": 0, "type": "ocean" },
+  { "name": "Arctic Ocean", "lat": 85, "lon": 0, "type": "ocean" },
+
+  { "name": "Mediterranean Sea", "lat": 35, "lon": 18, "type": "sea" },
+  { "name": "Caribbean Sea", "lat": 15, "lon": -75, "type": "sea" },
+  { "name": "South China Sea", "lat": 12, "lon": 115, "type": "sea" },
+  { "name": "Arabian Sea", "lat": 15, "lon": 65, "type": "sea" },
+  { "name": "Bay of Bengal", "lat": 15, "lon": 88, "type": "sea" },
+  { "name": "Gulf of Mexico", "lat": 25, "lon": -90, "type": "sea" },
+  { "name": "Bering Sea", "lat": 58, "lon": -175, "type": "sea" },
+  { "name": "Sea of Japan", "lat": 40, "lon": 135, "type": "sea" },
+  { "name": "North Sea", "lat": 56, "lon": 3, "type": "sea" },
+  { "name": "Coral Sea", "lat": -18, "lon": 155, "type": "sea" },
+  { "name": "Sea of Okhotsk", "lat": 55, "lon": 150, "type": "sea" },
+  { "name": "Hudson Bay", "lat": 60, "lon": -85, "type": "sea" }
+]
