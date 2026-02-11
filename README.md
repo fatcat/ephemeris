@@ -1,8 +1,37 @@
 # Ephemeris
 
-Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a Progressive Web App for classroom use with kids ages 8+.
+Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a Progressive Web App for classroom use with kids ages 8+. This app is suitably accurate for classroom study of the natural effect of Earth's axial tilt (obliquity). It will become inaccurate in simulations exceeding +-200 years.
 
-Features a 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using <a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank">Jean Meeus</a> algorithms. Includes time controls (smooth sweep and day-snap modes), geographic overlays (coastlines, rivers, lakes), latitude reference lines (equator, tropics, arctic circles), and per-location sun data (sunrise, sunset, elevation, azimuth).
+# Features 
+- 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using <a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank">Jean Meeus</a> algorithms
+- Includes time controls (smooth sweep and day-snap modes)
+- Geographic overlays (coastlines, rivers, lakes)
+- Latitude reference lines (equator, tropics, arctic circles) & longitude reference lines
+- Per-location sun data (sunrise, sunset, elevation, azimuth)
+- Allows changing the Earth's axial tilt from zero to ninety degrees
+
+![Ephemeris App](docs/ephemeris.png)
+
+# Installation
+```bash
+git clone https://github.com/fatcat/ephemeris.git
+cd ephemeris
+docker compose up -d --build
+```
+
+After bringing up the container the app will be running on http://x.x.x.x:8181. This port can be changed by editing the 'docker-compose.yml' file and 'docker compose restart.'
+
+# Post-installation
+```bash
+# After cloning repo or pulling from repo
+docker compose up -d --build
+
+# Up with no repo changes
+docker compose up -d
+
+# Shutdown
+docker compose down
+```
 
 ## Tech Stack
 
