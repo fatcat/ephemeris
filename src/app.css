@@ -5,6 +5,7 @@
   --color-text-muted: #8a8a9a;
   --color-accent: #d4a44c;
   --color-border: #2a2a4e;
+  --color-overlay-bg: rgba(26, 26, 46, 0.85);
 }
 
 *,

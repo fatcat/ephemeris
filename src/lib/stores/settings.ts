@@ -4,6 +4,7 @@
 
 import { writable, derived } from 'svelte/store';
 import { lookupTimezone } from '../utils/timezone.js';
+import { applyTheme, getThemeById } from '../themes.js';
 
 const STORAGE_KEY = 'ephemeris-settings';
 
@@ -21,6 +22,7 @@ const MAX_RECENT_LOCATIONS = 3;
 export const REAL_AXIAL_TILT = 23.44;
 
 interface Settings {
+  themeId: string;
   axialTilt: number;
   hardTerminator: boolean;
   showMinorGrid: boolean;
@@ -41,6 +43,7 @@ interface Settings {
 }
 
 const defaults: Settings = {
+  themeId: 'midnight',
   axialTilt: REAL_AXIAL_TILT,
   hardTerminator: false,
   showMinorGrid: true,
@@ -79,6 +82,11 @@ function saveSettings(s: Settings): void {
 }
 
 const initial = loadSettings();
+
+export const currentThemeId = writable<string>(initial.themeId);
+
+// Apply the saved theme immediately so CSS vars are set before first paint
+applyTheme(getThemeById(initial.themeId));
 
 export const axialTilt = writable<number>(initial.axialTilt);
 export const hardTerminator = writable<boolean>(initial.hardTerminator);
@@ -190,6 +198,13 @@ viewMode.subscribe((v) => {
   const s = loadSettings();
   s.viewMode = v;
   saveSettings(s);
+});
+
+currentThemeId.subscribe((v) => {
+  const s = loadSettings();
+  s.themeId = v;
+  saveSettings(s);
+  applyTheme(getThemeById(v));
 });
 
 /**

@@ -15,7 +15,12 @@
     useLocalTime,
     axialTilt,
     REAL_AXIAL_TILT,
+    currentThemeId,
   } from '../stores/settings.js';
+  import { THEMES } from '../themes.js';
+
+  const darkThemes = THEMES.filter((t) => t.group === 'dark');
+  const lightThemes = THEMES.filter((t) => t.group === 'light');
 
   interface Props {
     onclose: () => void;
@@ -39,6 +44,7 @@
   let sunInfo = $state(true);
   let localTime = $state(false);
   let tilt = $state(REAL_AXIAL_TILT);
+  let themeId = $state('midnight');
 
   showMinorGrid.subscribe((v) => (minorGrid = v));
   showMajorGrid.subscribe((v) => (majorGrid = v));
@@ -53,6 +59,12 @@
   showSunInfo.subscribe((v) => (sunInfo = v));
   useLocalTime.subscribe((v) => (localTime = v));
   axialTilt.subscribe((v) => (tilt = v));
+  currentThemeId.subscribe((v) => (themeId = v));
+
+  function onThemeChange(e: Event) {
+    const id = (e.target as HTMLSelectElement).value;
+    currentThemeId.set(id);
+  }
 
   // Info popup state
   let openInfo: string | null = $state(null);
@@ -107,6 +119,27 @@
   </div>
 
   <div class="popover-body">
+    <div class="theme-row">
+      <label class="theme-label" for="theme-select">Theme</label>
+      <select
+        id="theme-select"
+        class="theme-select"
+        value={themeId}
+        onchange={onThemeChange}
+      >
+        <optgroup label="Dark">
+          {#each darkThemes as t (t.id)}
+            <option value={t.id} selected={t.id === themeId}>{t.name}</option>
+          {/each}
+        </optgroup>
+        <optgroup label="Light">
+          {#each lightThemes as t (t.id)}
+            <option value={t.id} selected={t.id === themeId}>{t.name}</option>
+          {/each}
+        </optgroup>
+      </select>
+    </div>
+
     <label class="toggle-row">
       <input
         type="checkbox"
@@ -341,6 +374,36 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+  }
+
+  .theme-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .theme-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .theme-select {
+    flex: 1;
+    font-size: 0.7rem;
+    font-family: inherit;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .theme-select:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
   }
 
   .toggle-row {

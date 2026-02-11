@@ -31,6 +31,7 @@ const fragmentShader = /* glsl */ `
   uniform float uShowEquatorTropics;
   uniform float uShowArcticCircles;
   uniform float uShowNightLights;
+  uniform float uMapBrightness;
   uniform float uTropicLat;
   uniform float uArcticLat;
 
@@ -60,6 +61,7 @@ const fragmentShader = /* glsl */ `
     float dayFactor = mix(softDay, hardDay, uHardTerminator);
 
     vec4 dayColor = texture2D(uDayTexture, vUv);
+    dayColor.rgb *= uMapBrightness;
 
     // Night side: geography visible + optional city lights
     vec3 nightBase = dayColor.rgb * 0.10;
@@ -141,6 +143,7 @@ export function createProjectionShaderMaterial(
     uShowEquatorTropics: { value: 1.0 },
     uShowArcticCircles: { value: 1.0 },
     uShowNightLights: { value: 1.0 },
+    uMapBrightness: { value: 1.0 },
     uTropicLat: { value: 23.44 },
     uArcticLat: { value: 66.56 },
   };

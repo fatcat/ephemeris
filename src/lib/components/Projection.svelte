@@ -21,8 +21,10 @@
     userLocation,
     axialTilt,
     REAL_AXIAL_TILT,
+    currentThemeId,
     type UserLocation,
   } from '../stores/settings.js';
+  import { getThemeById, type Theme } from '../themes.js';
   import { updateSunMarkerProjection } from '../three/sunMarker.js';
   import { updateLocationMarkerProjection } from '../three/locationMarker.js';
   import { lonToPercent, latToPercent } from '../utils/geo.js';
@@ -64,6 +66,8 @@
   showNightLights.subscribe((v) => (nightLights = v));
   userLocation.subscribe((v) => (loc = v));
   axialTilt.subscribe((v) => (tilt = v));
+  let currentTheme: Theme = $state(getThemeById('midnight'));
+  currentThemeId.subscribe((v) => (currentTheme = getThemeById(v)));
 
   // Geo labels (continents, oceans, seas only)
   const allLabels = labelsData as GeoLabel[];
@@ -164,6 +168,8 @@
     projScene.material.uniforms.uShowEquatorTropics.value = eqTropics ? 1.0 : 0.0;
     projScene.material.uniforms.uShowArcticCircles.value = arcticCirc ? 1.0 : 0.0;
     projScene.material.uniforms.uShowNightLights.value = nightLights ? 1.0 : 0.0;
+    projScene.material.uniforms.uMapBrightness.value = currentTheme.mapBrightness;
+    projScene.renderer.setClearColor(currentTheme.clearColor);
 
     // Update special latitude uniforms from current tilt
     projScene.material.uniforms.uTropicLat.value = tilt;

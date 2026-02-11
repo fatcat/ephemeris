@@ -171,11 +171,12 @@
     top: 0.5rem;
     right: 0.5rem;
     z-index: 2;
-    background: rgba(26, 26, 46, 0.85);
+    background: var(--color-overlay-bg);
     border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 0.4rem 0.6rem;
     max-width: 14rem;
+    overflow: hidden;
   }
 
   .reset-view-btn {
@@ -187,7 +188,7 @@
     height: 2.2rem;
     border-radius: 50%;
     border: 1px solid var(--color-border);
-    background: rgba(26, 26, 46, 0.8);
+    background: var(--color-overlay-bg);
     color: var(--color-text-muted);
     font-size: 1.1rem;
     cursor: pointer;

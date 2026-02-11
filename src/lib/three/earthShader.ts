@@ -35,6 +35,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uSunDirection;
   uniform float uHardTerminator;
   uniform float uShowNightLights;
+  uniform float uMapBrightness;
 
   varying vec3 vObjNormal;
   varying vec2 vUv;
@@ -53,8 +54,9 @@ const fragmentShader = /* glsl */ `
     float hardDay = smoothstep(-fw, fw, sunAngle);
     float dayFactor = mix(softDay, hardDay, uHardTerminator);
 
-    // Sample the day texture
+    // Sample the day texture (neutral brightness adjustment for theme)
     vec4 dayColor = texture2D(uDayTexture, vUv);
+    dayColor.rgb *= uMapBrightness;
 
     // Night side: geography visible + optional city lights
     vec3 nightBase = dayColor.rgb * 0.10;
@@ -84,6 +86,7 @@ export function createEarthShaderMaterial(
     uSunDirection: { value: new Vector3(0, 0, 1) },
     uHardTerminator: { value: 0.0 },
     uShowNightLights: { value: 1.0 },
+    uMapBrightness: { value: 1.0 },
   };
 
   return new ShaderMaterial({

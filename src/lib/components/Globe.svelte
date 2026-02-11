@@ -19,8 +19,10 @@
     cameraLatitude,
     axialTilt,
     REAL_AXIAL_TILT,
+    currentThemeId,
     type UserLocation,
   } from '../stores/settings.js';
+  import { getThemeById, type Theme } from '../themes.js';
   import { updateSunMarkerGlobe } from '../three/sunMarker.js';
   import { updateLocationMarkerGlobe } from '../three/locationMarker.js';
   import { updateSpecialLatitudes } from '../three/gridLines.js';
@@ -66,6 +68,8 @@
   showSubsolarPoint.subscribe((v) => (subsolar = v));
   showNightLights.subscribe((v) => (nightLights = v));
   userLocation.subscribe((v) => (loc = v));
+  let currentTheme: Theme = $state(getThemeById('midnight'));
+  currentThemeId.subscribe((v) => (currentTheme = getThemeById(v)));
 
   // Globe labels — always-visible set (continents, oceans, seas)
   const allLabels = labelsData as GeoLabel[];
@@ -227,6 +231,8 @@
     globeScene.material.uniforms.uSunDirection.value.copy(sunDir);
     globeScene.material.uniforms.uHardTerminator.value = hard ? 1.0 : 0.0;
     globeScene.material.uniforms.uShowNightLights.value = nightLights ? 1.0 : 0.0;
+    globeScene.material.uniforms.uMapBrightness.value = currentTheme.mapBrightness;
+    globeScene.renderer.setClearColor(currentTheme.clearColor);
 
     // Update visual tilt and grid lines when axial tilt changes
     if (tilt !== prevTilt) {
