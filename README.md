@@ -13,15 +13,25 @@ Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a 
 ![Ephemeris App](docs/ephemeris.png)
 
 # Installation
+
+## Build and run
+
+### With Docker Compose
 ```bash
 git clone https://github.com/fatcat/ephemeris.git
 cd ephemeris
 docker compose up -d --build
 ```
 
+### With Docker
+```bash
+docker build -t ephemeris .
+docker run -p 8080:80 ephemeris
+```
+
 After bringing up the container the app will be running on http://x.x.x.x:8181. This port can be changed by editing the 'docker-compose.yml' file and 'docker compose restart.'
 
-# Post-installation
+### Post-installation
 ```bash
 # After cloning repo or pulling from repo
 docker compose up -d --build
@@ -33,14 +43,15 @@ docker compose up -d
 docker compose down
 ```
 
+# Development
+
 ## Tech Stack
 
 - Svelte 5 (runes mode) + TypeScript
 - Three.js (WebGL)
 - Vite + vite-plugin-pwa
 
-## Development
-
+## Run, build and test
 ```bash
 npm install
 npm run dev          # dev server with HMR
@@ -49,26 +60,7 @@ npm run check        # type checking (svelte-check)
 npm run lint         # eslint
 ```
 
-## Docker
-
-### Build and run
-
-```bash
-docker build -t ephemeris .
-docker run -p 8080:80 ephemeris
-```
-
-Or with Docker Compose:
-
-```bash
-docker compose up -d          # build and start
-docker compose down            # stop
-docker compose up -d --build   # rebuild after changes
-```
-
-The app will be available at `http://localhost:8181`.
-
-### How the image works
+## How the image works
 
 The Dockerfile uses a two-stage build:
 
@@ -79,12 +71,12 @@ Final image size is ~63 MB.
 
 ### Updating dependencies
 
-Some bundled data ages over time:
+Some bundled data ages over time, albeit slowly.
 
 - **Timezone boundaries** (`@photostructure/tz-lookup`) — IANA timezone data updates a few times per year as countries adjust timezone rules
 - **npm packages** — periodic security patches
 
-To update:
+Updating containers once or twice a year is plenty to keep things current. To update:
 
 ```bash
 npm update              # update packages within semver ranges
