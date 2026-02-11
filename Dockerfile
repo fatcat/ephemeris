@@ -8,6 +8,11 @@ RUN npm run build
 
 # Stage 2: Serve
 FROM nginx:alpine
+RUN apk add --no-cache openssl && \
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+      -keyout /etc/ssl/private/selfsigned.key \
+      -out /etc/ssl/certs/selfsigned.crt \
+      -subj "/CN=ephemeris"
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 80 443
