@@ -23,16 +23,11 @@ const MINOR_OPACITY = 0.2;
 
 // Special line colors
 const EQUATOR_TROPICS_COLOR = 0xd4a44c; // warm amber/gold
-const ARCTIC_CIRCLES_COLOR = 0x6ba3c7;  // cool icy blue
+const ARCTIC_CIRCLES_COLOR = 0xb0e0ff;  // bright ice-white cyan
 const SPECIAL_OPACITY = 0.85;
+const ARCTIC_OPACITY = 1.0;
 
-// Special latitudes
-const AXIAL_TILT = 23.44;
-const EQUATOR = 0;
-const TROPIC_CANCER = AXIAL_TILT;
-const TROPIC_CAPRICORN = -AXIAL_TILT;
-const ARCTIC_CIRCLE = 90 - AXIAL_TILT; // 66.56
-const ANTARCTIC_CIRCLE = -(90 - AXIAL_TILT);
+const DEFAULT_TILT = 23.44;
 
 export interface GlobeGrid {
   group: Group;
@@ -101,7 +96,38 @@ function buildLineGroup(positions: number[], color: number, opacity: number): Gr
   return group;
 }
 
-export function createGlobeGrid(): GlobeGrid {
+/** Dispose all children (LineSegments) from a group. */
+function clearLineGroup(group: Group): void {
+  for (const child of group.children) {
+    if (child instanceof LineSegments) {
+      child.geometry.dispose();
+      if (child.material instanceof LineBasicMaterial) {
+        child.material.dispose();
+      }
+    }
+  }
+  group.clear();
+}
+
+/** Build the equator + tropics lines for a given tilt. */
+function buildEquatorTropicsGroup(tiltDeg: number): Group {
+  const positions: number[] = [];
+  positions.push(...createLatitudeCircle(0, GRID_RADIUS)); // equator always at 0°
+  positions.push(...createLatitudeCircle(tiltDeg, GRID_RADIUS));
+  positions.push(...createLatitudeCircle(-tiltDeg, GRID_RADIUS));
+  return buildLineGroup(positions, EQUATOR_TROPICS_COLOR, SPECIAL_OPACITY);
+}
+
+/** Build the arctic/antarctic circle lines for a given tilt. */
+function buildArcticCirclesGroup(tiltDeg: number): Group {
+  const arcticLat = 90 - tiltDeg;
+  const positions: number[] = [];
+  positions.push(...createLatitudeCircle(arcticLat, GRID_RADIUS));
+  positions.push(...createLatitudeCircle(-arcticLat, GRID_RADIUS));
+  return buildLineGroup(positions, ARCTIC_CIRCLES_COLOR, ARCTIC_OPACITY);
+}
+
+export function createGlobeGrid(tiltDeg: number = DEFAULT_TILT): GlobeGrid {
   const group = new Group();
 
   const majorPositions: number[] = [];
@@ -125,17 +151,9 @@ export function createGlobeGrid(): GlobeGrid {
   const majorLines = buildLineGroup(majorPositions, MAJOR_COLOR, MAJOR_OPACITY);
   const minorLines = buildLineGroup(minorPositions, MINOR_COLOR, MINOR_OPACITY);
 
-  // Special latitude lines
-  const eqTropicPositions: number[] = [];
-  eqTropicPositions.push(...createLatitudeCircle(EQUATOR, GRID_RADIUS));
-  eqTropicPositions.push(...createLatitudeCircle(TROPIC_CANCER, GRID_RADIUS));
-  eqTropicPositions.push(...createLatitudeCircle(TROPIC_CAPRICORN, GRID_RADIUS));
-  const equatorTropicsLines = buildLineGroup(eqTropicPositions, EQUATOR_TROPICS_COLOR, SPECIAL_OPACITY);
-
-  const arcticPositions: number[] = [];
-  arcticPositions.push(...createLatitudeCircle(ARCTIC_CIRCLE, GRID_RADIUS));
-  arcticPositions.push(...createLatitudeCircle(ANTARCTIC_CIRCLE, GRID_RADIUS));
-  const arcticCircleLines = buildLineGroup(arcticPositions, ARCTIC_CIRCLES_COLOR, SPECIAL_OPACITY);
+  // Special latitude lines — built from the current tilt
+  const equatorTropicsLines = buildEquatorTropicsGroup(tiltDeg);
+  const arcticCircleLines = buildArcticCirclesGroup(tiltDeg);
 
   group.add(majorLines);
   group.add(minorLines);
@@ -143,4 +161,26 @@ export function createGlobeGrid(): GlobeGrid {
   group.add(arcticCircleLines);
 
   return { group, majorLines, minorLines, equatorTropicsLines, arcticCircleLines };
+}
+
+/**
+ * Rebuild the special latitude lines (tropics + arctic circles) for a new tilt.
+ * Disposes old geometry and creates new LineSegments in place.
+ */
+export function updateSpecialLatitudes(grid: GlobeGrid, tiltDeg: number): void {
+  // Rebuild equator + tropics
+  clearLineGroup(grid.equatorTropicsLines);
+  const newEqTropic = buildEquatorTropicsGroup(tiltDeg);
+  for (const child of [...newEqTropic.children]) {
+    newEqTropic.remove(child);
+    grid.equatorTropicsLines.add(child);
+  }
+
+  // Rebuild arctic circles
+  clearLineGroup(grid.arcticCircleLines);
+  const newArctic = buildArcticCirclesGroup(tiltDeg);
+  for (const child of [...newArctic.children]) {
+    newArctic.remove(child);
+    grid.arcticCircleLines.add(child);
+  }
 }

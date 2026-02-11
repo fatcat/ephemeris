@@ -31,6 +31,8 @@ const fragmentShader = /* glsl */ `
   uniform float uShowEquatorTropics;
   uniform float uShowArcticCircles;
   uniform float uShowNightLights;
+  uniform float uTropicLat;
+  uniform float uArcticLat;
 
   varying vec2 vUv;
 
@@ -50,9 +52,11 @@ const fragmentShader = /* glsl */ `
     vec3 sunDir = normalize(uSunDirection);
     float sunAngle = dot(normalize(normal), sunDir);
 
-    // Day factor: soft (smooth twilight) or hard (sharp edge)
+    // Day factor: soft (smooth twilight) or hard (anti-aliased sharp edge)
     float softDay = smoothstep(-0.309, 0.05, sunAngle);
-    float hardDay = step(0.0, sunAngle);
+    // Use fwidth() for a crisp but anti-aliased 1-pixel-wide transition
+    float fw = fwidth(sunAngle);
+    float hardDay = smoothstep(-fw, fw, sunAngle);
     float dayFactor = mix(softDay, hardDay, uHardTerminator);
 
     vec4 dayColor = texture2D(uDayTexture, vUv);
@@ -105,17 +109,17 @@ const fragmentShader = /* glsl */ `
 
     // Equator + Tropics of Cancer/Capricorn (thicker, warm amber)
     float equatorLine = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat));
-    float tropicCancer = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat - 23.44));
-    float tropicCapricorn = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat + 23.44));
+    float tropicCancer = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat - uTropicLat));
+    float tropicCapricorn = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat + uTropicLat));
     float eqTropicAlpha = max(equatorLine, max(tropicCancer, tropicCapricorn)) * 0.8 * uShowEquatorTropics;
     vec3 eqTropicColor = vec3(0.83, 0.64, 0.30);
     color = mix(color, eqTropicColor, eqTropicAlpha);
 
     // Arctic/Antarctic circles (thicker, cool blue)
-    float arcticLine = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat - 66.56));
-    float antarcticLine = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat + 66.56));
-    float arcticAlpha = max(arcticLine, antarcticLine) * 0.8 * uShowArcticCircles;
-    vec3 arcticColor = vec3(0.42, 0.64, 0.78);
+    float arcticLine = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat - uArcticLat));
+    float antarcticLine = 1.0 - smoothstep(0.0, dLat * 2.5, abs(lat + uArcticLat));
+    float arcticAlpha = max(arcticLine, antarcticLine) * 1.0 * uShowArcticCircles;
+    vec3 arcticColor = vec3(0.69, 0.88, 1.0);
     color = mix(color, arcticColor, arcticAlpha);
 
     gl_FragColor = vec4(color, 1.0);
@@ -137,6 +141,8 @@ export function createProjectionShaderMaterial(
     uShowEquatorTropics: { value: 1.0 },
     uShowArcticCircles: { value: 1.0 },
     uShowNightLights: { value: 1.0 },
+    uTropicLat: { value: 23.44 },
+    uArcticLat: { value: 66.56 },
   };
 
   return new ShaderMaterial({

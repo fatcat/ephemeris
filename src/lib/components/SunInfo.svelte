@@ -1,19 +1,21 @@
 <script lang="ts">
   import { computeSunData, type SunData } from '../astronomy/solar.js';
   import { currentTime } from '../stores/time.js';
-  import { userLocation, useLocalTime, userTimezone, type UserLocation } from '../stores/settings.js';
+  import { userLocation, useLocalTime, userTimezone, axialTilt, REAL_AXIAL_TILT, type UserLocation } from '../stores/settings.js';
   import { getUtcOffsetMs, getTimezoneAbbr } from '../utils/timezone.js';
 
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
   let time: Date = $state(new Date());
   let localTime = $state(false);
   let tz = $state('Etc/UTC');
+  let tilt = $state(REAL_AXIAL_TILT);
   userLocation.subscribe((v) => (loc = v));
   currentTime.subscribe((v) => (time = v));
   useLocalTime.subscribe((v) => (localTime = v));
   userTimezone.subscribe((v) => (tz = v));
+  axialTilt.subscribe((v) => (tilt = v));
 
-  let sunData: SunData = $derived(computeSunData(time, loc.lat, loc.lon));
+  let sunData: SunData = $derived(computeSunData(time, loc.lat, loc.lon, tilt));
 
   function formatTime(d: Date | null): string {
     if (!d) return '—';

@@ -76,8 +76,14 @@ export function greenwichMeanSiderealTime(jd: number): number {
 
 /**
  * Compute solar position (declination, right ascension) for a given date.
+ *
+ * @param customObliquityDeg - If provided, overrides the computed obliquity
+ *   of the ecliptic (in degrees). The ecliptic longitude λ is still computed
+ *   from Meeus orbital mechanics; only the ecliptic→equatorial coordinate
+ *   transform uses the custom value. This gives the exact result for
+ *   "what if Earth's axial tilt were different?"
  */
-export function solarPosition(date: Date): SolarPosition {
+export function solarPosition(date: Date, customObliquityDeg?: number): SolarPosition {
   const jd = julianDay(date);
   const clampedJd = Math.max(MIN_JD, Math.min(MAX_JD, jd));
   const T = (clampedJd - J2000) / 36525.0;
@@ -98,26 +104,29 @@ export function solarPosition(date: Date): SolarPosition {
   // Sun's true longitude (degrees)
   const theta = L0 + C;
 
-  // Mean obliquity of the ecliptic (degrees)
-  const eps0 =
-    23.439291 - 0.013004 * T - 1.64e-7 * T * T + 5.04e-7 * T * T * T;
-
   // Nutation (simplified)
   const omega_deg = normalizeDeg(125.04 - 1934.136 * T);
   const omega = omega_deg * DEG_TO_RAD;
 
-  // Corrected obliquity (degrees)
-  const eps_deg = eps0 + 0.00256 * Math.cos(omega);
-  const eps = eps_deg * DEG_TO_RAD;
-
-  // Apparent longitude (degrees → radians)
+  // Apparent longitude (degrees → radians) — independent of obliquity
   const lambda_deg = theta - 0.00569 - 0.00478 * Math.sin(omega);
   const lambda = lambda_deg * DEG_TO_RAD;
 
-  // Solar declination
+  // Obliquity: use custom value if provided, otherwise compute from Meeus
+  let eps: number;
+  if (customObliquityDeg !== undefined) {
+    eps = customObliquityDeg * DEG_TO_RAD;
+  } else {
+    const eps0 =
+      23.439291 - 0.013004 * T - 1.64e-7 * T * T + 5.04e-7 * T * T * T;
+    const eps_deg = eps0 + 0.00256 * Math.cos(omega);
+    eps = eps_deg * DEG_TO_RAD;
+  }
+
+  // Solar declination: δ = arcsin(sin(ε) × sin(λ))
   const declination = Math.asin(Math.sin(eps) * Math.sin(lambda));
 
-  // Solar right ascension
+  // Solar right ascension: α = atan2(cos(ε) × sin(λ), cos(λ))
   const rightAscension = Math.atan2(
     Math.cos(eps) * Math.sin(lambda),
     Math.cos(lambda),
@@ -147,8 +156,8 @@ export function solarPosition(date: Date): SolarPosition {
  * - Time of day (hour angle / Earth rotation)
  * - Time of year (solar declination from orbital position)
  */
-export function sunDirectionVector(date: Date): Vector3 {
-  const { declination, rightAscension } = solarPosition(date);
+export function sunDirectionVector(date: Date, customObliquityDeg?: number): Vector3 {
+  const { declination, rightAscension } = solarPosition(date, customObliquityDeg);
   const jd = julianDay(date);
 
   // Greenwich Mean Sidereal Time (degrees → radians)
@@ -261,8 +270,9 @@ export function sunElevationAzimuth(
   date: Date,
   latDeg: number,
   lonDeg: number,
+  customObliquityDeg?: number,
 ): { elevation: number; azimuth: number } {
-  const { declination, rightAscension } = solarPosition(date);
+  const { declination, rightAscension } = solarPosition(date, customObliquityDeg);
   const jd = julianDay(date);
   const gmst = greenwichMeanSiderealTime(jd) * DEG_TO_RAD;
 
@@ -297,8 +307,8 @@ export function sunElevationAzimuth(
  * Compute the equation of time (minutes) for a given date.
  * Returns the difference between apparent solar time and mean solar time.
  */
-function equationOfTime(date: Date): number {
-  const { rightAscension } = solarPosition(date);
+function equationOfTime(date: Date, customObliquityDeg?: number): number {
+  const { rightAscension } = solarPosition(date, customObliquityDeg);
   const jd = julianDay(date);
   const T = (jd - J2000) / 36525.0;
   const L0 = normalizeDeg(280.46646 + 36000.76983 * T + 0.0003032 * T * T);
@@ -321,6 +331,7 @@ export function sunriseSunset(
   date: Date,
   latDeg: number,
   lonDeg: number,
+  customObliquityDeg?: number,
 ): {
   sunrise: Date | null;
   sunset: Date | null;
@@ -335,11 +346,11 @@ export function sunriseSunset(
     12, 0, 0,
   ));
 
-  const { declination } = solarPosition(noon);
+  const { declination } = solarPosition(noon, customObliquityDeg);
   const lat = latDeg * DEG_TO_RAD;
 
   // Solar noon: 12:00 UTC minus equation of time, adjusted for longitude
-  const eotMinutes = equationOfTime(noon);
+  const eotMinutes = equationOfTime(noon, customObliquityDeg);
   const solarNoonMinutes = 720 - lonDeg * 4 - eotMinutes; // minutes from midnight UTC
   const solarNoonDate = new Date(Date.UTC(
     date.getUTCFullYear(),
@@ -401,9 +412,10 @@ export function computeSunData(
   date: Date,
   latDeg: number,
   lonDeg: number,
+  customObliquityDeg?: number,
 ): SunData {
-  const { elevation, azimuth } = sunElevationAzimuth(date, latDeg, lonDeg);
-  const { sunrise, sunset, solarNoon, dayLength } = sunriseSunset(date, latDeg, lonDeg);
+  const { elevation, azimuth } = sunElevationAzimuth(date, latDeg, lonDeg, customObliquityDeg);
+  const { sunrise, sunset, solarNoon, dayLength } = sunriseSunset(date, latDeg, lonDeg, customObliquityDeg);
 
   let status: string;
   if (dayLength >= 24) {

@@ -46,9 +46,11 @@ const fragmentShader = /* glsl */ `
     // Sun angle: 1.0 = directly facing sun, -1.0 = directly away
     float sunAngle = dot(n, sunDir);
 
-    // Day factor: soft (smooth twilight) or hard (sharp edge)
+    // Day factor: soft (smooth twilight) or hard (anti-aliased sharp edge)
     float softDay = smoothstep(-0.309, 0.05, sunAngle);
-    float hardDay = step(0.0, sunAngle);
+    // Use fwidth() for a crisp but anti-aliased 1-pixel-wide transition
+    float fw = fwidth(sunAngle);
+    float hardDay = smoothstep(-fw, fw, sunAngle);
     float dayFactor = mix(softDay, hardDay, uHardTerminator);
 
     // Sample the day texture

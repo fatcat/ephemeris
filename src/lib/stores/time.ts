@@ -9,6 +9,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { sunDirectionVector, formatDateUTC } from '../astronomy/solar.js';
+import { axialTilt } from './settings.js';
 import { Vector3 } from 'three';
 
 export type PlaybackMode = 'realtime' | 'smooth' | 'snap';
@@ -47,9 +48,10 @@ export const snapInterval = writable<number>(1);
 /** Whether time is advancing */
 export const isPlaying = writable<boolean>(true);
 
-/** Derived: sun direction vector for shader uniform */
-export const sunDirection = derived(currentTime, ($time) =>
-  sunDirectionVector($time),
+/** Derived: sun direction vector for shader uniform (reacts to both time and tilt) */
+export const sunDirection = derived(
+  [currentTime, axialTilt],
+  ([$time, $tilt]) => sunDirectionVector($time, $tilt),
 );
 
 /** Derived: formatted date/time string */

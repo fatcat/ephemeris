@@ -19,6 +19,8 @@
     showSubsolarPoint,
     showNightLights,
     userLocation,
+    axialTilt,
+    REAL_AXIAL_TILT,
     type UserLocation,
   } from '../stores/settings.js';
   import { updateSunMarkerProjection } from '../three/sunMarker.js';
@@ -48,6 +50,7 @@
   let subsolar = $state(true);
   let nightLights = $state(true);
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
+  let tilt = $state(REAL_AXIAL_TILT);
   hardTerminator.subscribe((v) => (hard = v));
   showMinorGrid.subscribe((v) => (minorGrid = v));
   showMajorGrid.subscribe((v) => (majorGrid = v));
@@ -60,6 +63,7 @@
   showSubsolarPoint.subscribe((v) => (subsolar = v));
   showNightLights.subscribe((v) => (nightLights = v));
   userLocation.subscribe((v) => (loc = v));
+  axialTilt.subscribe((v) => (tilt = v));
 
   // Geo labels (continents, oceans, seas only)
   const allLabels = labelsData as GeoLabel[];
@@ -107,13 +111,13 @@
     kind: 'warm' | 'cool';
   }
 
-  const specialLatLabels: SpecialLatLabel[] = [
-    { name: 'Equator', lat: 0, kind: 'warm' },
-    { name: 'Tropic of Cancer', lat: 23.44, kind: 'warm' },
-    { name: 'Tropic of Capricorn', lat: -23.44, kind: 'warm' },
-    { name: 'Arctic Circle', lat: 66.56, kind: 'cool' },
-    { name: 'Antarctic Circle', lat: -66.56, kind: 'cool' },
-  ];
+  let specialLatLabels: SpecialLatLabel[] = $derived([
+    { name: 'Equator', lat: 0, kind: 'warm' as const },
+    { name: 'Tropic of Cancer', lat: tilt, kind: 'warm' as const },
+    { name: 'Tropic of Capricorn', lat: -tilt, kind: 'warm' as const },
+    { name: 'Arctic Circle', lat: 90 - tilt, kind: 'cool' as const },
+    { name: 'Antarctic Circle', lat: -(90 - tilt), kind: 'cool' as const },
+  ]);
 
   // Click-to-set-location
   let pointerDownPos: { x: number; y: number } | null = null;
@@ -160,6 +164,10 @@
     projScene.material.uniforms.uShowEquatorTropics.value = eqTropics ? 1.0 : 0.0;
     projScene.material.uniforms.uShowArcticCircles.value = arcticCirc ? 1.0 : 0.0;
     projScene.material.uniforms.uShowNightLights.value = nightLights ? 1.0 : 0.0;
+
+    // Update special latitude uniforms from current tilt
+    projScene.material.uniforms.uTropicLat.value = tilt;
+    projScene.material.uniforms.uArcticLat.value = 90 - tilt;
 
     // Update overlay sun direction uniforms
     projScene.coastlineOverlay.updateSunDirection(sunDir);

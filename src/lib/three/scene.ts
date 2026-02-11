@@ -19,6 +19,7 @@ import {
 } from './geoOverlays.js';
 import { createSunMarkerGlobe } from './sunMarker.js';
 import { createLocationMarkerGlobe } from './locationMarker.js';
+import { createPolePins } from './polePins.js';
 import earthDayUrl from '../../assets/textures/earth-day.jpg';
 import earthNightUrl from '../../assets/textures/earth-night.jpg';
 
@@ -33,6 +34,7 @@ export interface GlobeScene {
   renderer: WebGLRenderer;
   globe: Mesh;
   material: ShaderMaterial;
+  tiltGroup: Group;
   spinGroup: Group;
   sunMarker: Mesh;
   locationMarker: Mesh;
@@ -96,6 +98,10 @@ export function createGlobeScene(
   const locationMarker = createLocationMarkerGlobe(0.08);
   spinGroup.add(locationMarker);
 
+  // Barber-pole pins at north and south poles
+  const polePins = createPolePins();
+  spinGroup.add(polePins);
+
   // Geographic overlays (coastlines, rivers, lakes)
   const coastlineOverlay = createCoastlineOverlay('globe');
   const riverOverlay = createRiverOverlay('globe');
@@ -118,7 +124,7 @@ export function createGlobeScene(
   }
 
   return {
-    scene, camera, renderer, globe, material, spinGroup, sunMarker, locationMarker, grid,
+    scene, camera, renderer, globe, material, tiltGroup, spinGroup, sunMarker, locationMarker, grid,
     coastlineOverlay, riverOverlay, lakeOverlay,
     resize, dispose,
   };

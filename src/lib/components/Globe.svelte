@@ -17,10 +17,13 @@
     showNightLights,
     userLocation,
     cameraLatitude,
+    axialTilt,
+    REAL_AXIAL_TILT,
     type UserLocation,
   } from '../stores/settings.js';
   import { updateSunMarkerGlobe } from '../three/sunMarker.js';
   import { updateLocationMarkerGlobe } from '../three/locationMarker.js';
+  import { updateSpecialLatitudes } from '../three/gridLines.js';
   import { geoToGlobePosition } from '../utils/geo.js';
   import type { GeoLabel } from '../types/geo.js';
   import labelsData from '../../assets/geo/labels.json';
@@ -48,6 +51,9 @@
   let subsolar = $state(true);
   let nightLights = $state(true);
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
+  let tilt = $state(REAL_AXIAL_TILT);
+  let prevTilt = REAL_AXIAL_TILT;
+  axialTilt.subscribe((v) => (tilt = v));
   hardTerminator.subscribe((v) => (hard = v));
   showMinorGrid.subscribe((v) => (minorGrid = v));
   showMajorGrid.subscribe((v) => (majorGrid = v));
@@ -75,13 +81,13 @@
     kind: 'warm' | 'cool';
   }
 
-  const specialLabels: SpecialLabel[] = [
-    { name: 'Equator', lat: 0, lon: 0, kind: 'warm' },
-    { name: 'Tropic of Cancer', lat: 23.44, lon: 0, kind: 'warm' },
-    { name: 'Tropic of Capricorn', lat: -23.44, lon: 0, kind: 'warm' },
-    { name: 'Arctic Circle', lat: 66.56, lon: 0, kind: 'cool' },
-    { name: 'Antarctic Circle', lat: -66.56, lon: 0, kind: 'cool' },
-  ];
+  let specialLabels: SpecialLabel[] = $derived([
+    { name: 'Equator', lat: 0, lon: 0, kind: 'warm' as const },
+    { name: 'Tropic of Cancer', lat: tilt, lon: 0, kind: 'warm' as const },
+    { name: 'Tropic of Capricorn', lat: -tilt, lon: 0, kind: 'warm' as const },
+    { name: 'Arctic Circle', lat: 90 - tilt, lon: 0, kind: 'cool' as const },
+    { name: 'Antarctic Circle', lat: -(90 - tilt), lon: 0, kind: 'cool' as const },
+  ]);
 
   interface LabelPos {
     label: GeoLabel | SpecialLabel;
@@ -221,6 +227,13 @@
     globeScene.material.uniforms.uSunDirection.value.copy(sunDir);
     globeScene.material.uniforms.uHardTerminator.value = hard ? 1.0 : 0.0;
     globeScene.material.uniforms.uShowNightLights.value = nightLights ? 1.0 : 0.0;
+
+    // Update visual tilt and grid lines when axial tilt changes
+    if (tilt !== prevTilt) {
+      globeScene.tiltGroup.rotation.z = -(tilt * DEG_TO_RAD);
+      updateSpecialLatitudes(globeScene.grid, tilt);
+      prevTilt = tilt;
+    }
 
     // Update overlay sun direction uniforms
     globeScene.coastlineOverlay.updateSunDirection(sunDir);

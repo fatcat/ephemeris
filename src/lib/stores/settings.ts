@@ -17,7 +17,11 @@ export interface UserLocation {
 
 const MAX_RECENT_LOCATIONS = 3;
 
+/** Earth's real axial tilt in degrees */
+export const REAL_AXIAL_TILT = 23.44;
+
 interface Settings {
+  axialTilt: number;
   hardTerminator: boolean;
   showMinorGrid: boolean;
   showMajorGrid: boolean;
@@ -37,6 +41,7 @@ interface Settings {
 }
 
 const defaults: Settings = {
+  axialTilt: REAL_AXIAL_TILT,
   hardTerminator: false,
   showMinorGrid: true,
   showMajorGrid: true,
@@ -75,6 +80,7 @@ function saveSettings(s: Settings): void {
 
 const initial = loadSettings();
 
+export const axialTilt = writable<number>(initial.axialTilt);
 export const hardTerminator = writable<boolean>(initial.hardTerminator);
 export const showMinorGrid = writable<boolean>(initial.showMinorGrid);
 export const showMajorGrid = writable<boolean>(initial.showMajorGrid);
@@ -91,6 +97,12 @@ export const useLocalTime = writable<boolean>(initial.useLocalTime);
 export const viewMode = writable<ViewMode>(initial.viewMode);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
+
+axialTilt.subscribe((v) => {
+  const s = loadSettings();
+  s.axialTilt = v;
+  saveSettings(s);
+});
 
 hardTerminator.subscribe((v) => {
   const s = loadSettings();
