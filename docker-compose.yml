@@ -4,4 +4,6 @@ services:
     ports:
       - "8181:80"
       - "8443:443"
+    volumes:
+      - ./certs:/certs:ro
     restart: unless-stopped

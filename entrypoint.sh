@@ -1,16 +1,31 @@
 #!/bin/sh
+
 echo ""
+echo ""
+echo ""
+
+# Check for certs
+if [ ! -f /certs/server.crt ] || [ ! -f /certs/server.key ]; then
+  echo "========================================="
+  echo "  ERROR: No certs found in /certs/"
+  echo ""
+  echo "  Run ./generate-certs.sh first, then"
+  echo "  rebuild with: docker compose up --build"
+  echo "========================================="
+  exit 1
+fi
+
 echo "========================================="
 echo "  Ephemeris is running"
-echo "  HTTP:  http://localhost:80"
-echo "  HTTPS: https://localhost:443"
 echo ""
-echo "  To enable offline PWA, install the CA"
-echo "  cert in your OS trust store:"
-echo "    https://localhost:443/ca.crt"
+echo "  HTTP:  port 80  (redirects to HTTPS)"
+echo "  HTTPS: port 443"
 echo ""
-echo "  Or extract it from the container:"
-echo "    docker cp <container>:/certs/ephemeris-ca.crt ."
+if [ -f /certs/ca.crt ]; then
+  echo "  CA cert download: https://<host>/ca.crt"
+  echo ""
+fi
 echo "========================================="
 echo ""
+
 exec nginx -g "daemon off;"
