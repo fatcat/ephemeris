@@ -2,7 +2,7 @@
 
 Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a Progressive Web App for classroom use with kids ages 8+.
 
-Features a 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using [Jean Meeus](https://en.wikipedia.org/wiki/Jean_Meeus) algorithms. Includes time controls (smooth sweep and day-snap modes), geographic overlays (coastlines, rivers, lakes), latitude reference lines (equator, tropics, arctic circles), and per-location sun data (sunrise, sunset, elevation, azimuth).
+Features a 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using <a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank">Jean Meeus</a> algorithms. Includes time controls (smooth sweep and day-snap modes), geographic overlays (coastlines, rivers, lakes), latitude reference lines (equator, tropics, arctic circles), and per-location sun data (sunrise, sunset, elevation, azimuth).
 
 ## Tech Stack
 
