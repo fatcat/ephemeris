@@ -10,12 +10,9 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **Phase 7 — Polish, Performance & PWA** (in progress)
+> **All phases complete.** The project is finished.
 >
-> Phases 1-6 are complete. See `docs/phases/phase-7.md` for the implementation prompt.
 > See `docs/phases/README.md` for overall phase status.
-
-When beginning work on a phase, read the corresponding phase document in `docs/phases/` for the full implementation prompt and acceptance criteria.
 
 ## Tech Stack
 
