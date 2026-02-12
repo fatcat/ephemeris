@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: 'Ephemeris',
         short_name: 'Ephemeris',
-        description: 'Educational day/night terminator visualization',
+        description: 'Interactive 3D globe showing Earth\'s day/night terminator and how axial tilt causes seasons. Free educational tool for students and teachers.',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',
         display: 'standalone',

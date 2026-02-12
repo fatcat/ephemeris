@@ -3,4 +3,4 @@ dist/
 dev-dist/
 .vite/
 *.local
-certs/
+certs/*

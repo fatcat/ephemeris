@@ -18,8 +18,8 @@ fi
 echo "========================================="
 echo "  Ephemeris is running"
 echo ""
-echo "  HTTP:  port 80  (redirects to HTTPS)"
-echo "  HTTPS: port 443"
+echo "  HTTP:  port 8080  (redirects to HTTPS)"
+echo "  HTTPS: port 8443"
 echo ""
 if [ -f /certs/ca.crt ]; then
   echo "  CA cert download: https://<host>/ca.crt"
