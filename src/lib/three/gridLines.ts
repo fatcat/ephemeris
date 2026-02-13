@@ -16,8 +16,8 @@ import {
 
 const GRID_RADIUS = 1.003; // slightly above the 1.0 sphere
 const SEGMENTS_PER_CIRCLE = 128;
-const MAJOR_COLOR = 0x8a8a9a;
-const MINOR_COLOR = 0x4a4a6a;
+const MAJOR_COLOR = 0x777777;
+const MINOR_COLOR = 0x4a4a4a;
 const MAJOR_OPACITY = 0.4;
 const MINOR_OPACITY = 0.2;
 

@@ -12,13 +12,19 @@
 
 set -e
 
-HOSTNAME="${1:-ephemeris}"
+if [ -z $1 ]; then
+  echo "Hostname for server certificate is required as a parameter"
+  echo "Example: ${0} myhost.mydomain.com"
+  exit 1
+fi
+
+HOSTNAME="${1}"
 CERT_DIR="$(dirname "$0")/certs"
 
-if [ -f "$CERT_DIR/ca.crt" ] && [ -f "$CERT_DIR/server.crt" ]; then
+if [ -f "$CERT_DIR/ca.crt" ] || [ -f "$CERT_DIR/server.crt" ]; then
   echo "Certs already exist in $CERT_DIR/"
-  echo "Delete the directory and re-run to regenerate."
-  exit 0
+  echo "Delete the directory and re-run"
+  exit 1
 fi
 
 mkdir -p "$CERT_DIR"

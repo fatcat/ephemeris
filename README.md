@@ -14,21 +14,53 @@ Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a 
 
 # Installation
 
-## Build and run
+## Build and run, new install
+
+Use these instructions if this is a new install of the application.
 
 ### With Docker Compose
 ```bash
 git clone https://github.com/fatcat/ephemeris.git
 cd ephemeris
-./generate-certs.sh        # one-time: creates self-signed certs in ./certs/
-docker compose up -d --build
+docker compose build --no-cache
 ```
 
 ### With Docker
 ```bash
-./generate-certs.sh
+git clone https://github.com/fatcat/ephemeris.git
 docker build -t ephemeris .
+```
+
+## Update the app
+
+After the initial "clone" is performed, the app must be rebuilt if an update from the repo is made, or if any local changes to the code or container configuration are made.
+
+### With Docker Compose, update app from repo
+
+```bash
+git pull
+docker compose build --no-cache
+```
+
+### Start-up
+
+Before starting the app, SSL certificates must be installed in ./ephemeris/certs. If this is a new clone of the repo, see the section on certificates below. If this is an existing install you should already have certificates in place. Pulling repo updates or performing a docker build does not alter the certificates.
+
+```bash
+# With Docker Compose
+docker compose up -d
+
+# With Docker
 docker run -p 8181:8080 -p 8443:8443 -v ./certs:/certs:ro ephemeris
+```
+
+### Shutdown
+```bash
+# With Docker Compose
+docker compose down
+
+# With Docker
+docker down
 ```
 
 After bringing up the container the app will be running at https://x.x.x.x:8443 (HTTP on port 8181 redirects to HTTPS). These ports can be changed by editing `docker-compose.yml` and running `docker compose up -d`.
@@ -120,17 +152,6 @@ No `ca.crt` is needed — browsers already trust Let's Encrypt. You will need to
 
 If you are behind a reverse proxy (e.g. Traefik, Caddy, or an institutional load balancer) that already terminates TLS, you can skip the certificate setup entirely and proxy directly to the container's HTTP port (8080).
 
-### Post-installation
-```bash
-# After cloning repo or pulling from repo
-docker compose up -d --build
-
-# Up with no repo changes
-docker compose up -d
-
-# Shutdown
-docker compose down
-```
 
 # Development
 
@@ -177,5 +198,5 @@ docker build -t ephemeris .   # rebuild the image
 No external data is fetched at runtime. All textures, timezone data, and solar algorithms are bundled at build time. Rebuilding the image a couple of times per year is sufficient to stay current.
 
 ## License
-
-All textures and geographic data are public domain (Natural Earth, NASA). Code is MIT.
+Code is MIT.
+All textures and geographic data are public domain (Natural Earth, NASA).
