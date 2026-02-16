@@ -2,9 +2,9 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN NODE_OPTIONS="--max-old-space-size=384" npm ci
 COPY . .
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=384" npm run build
 
 # Stage 2: Serve (rootless)
 FROM nginx:alpine

@@ -22,7 +22,7 @@ Use these instructions if this is a new install of the application.
 ```bash
 git clone https://github.com/fatcat/ephemeris.git
 cd ephemeris
-docker compose build --no-cache
+docker compose --build
 ```
 
 ### With Docker
@@ -60,7 +60,7 @@ docker run -p 8181:8080 -p 8443:8443 -v ./certs:/certs:ro ephemeris
 docker compose down
 
 # With Docker
-docker down
+docker <container id> down
 ```
 
 After bringing up the container the app will be running at https://x.x.x.x:8443 (HTTP on port 8181 redirects to HTTPS). These ports can be changed by editing `docker-compose.yml` and running `docker compose up -d`.

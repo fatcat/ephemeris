@@ -310,7 +310,7 @@
             axialTilt.set(Number((e.target as HTMLInputElement).value))}
           aria-label="Axial tilt in degrees"
         />
-        <span class="tilt-value">{tilt.toFixed(1)}&deg;</span>
+        <span class="tilt-value">{tilt.toFixed(2)}&deg;</span>
         {#if tilt !== REAL_AXIAL_TILT}
           <button
             class="btn tilt-reset"
