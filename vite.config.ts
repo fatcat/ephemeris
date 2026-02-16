@@ -4,6 +4,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 // import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig({
+  publicDir: 'static',
   plugins: [
     svelte(),
   ],
