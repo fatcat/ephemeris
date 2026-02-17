@@ -102,7 +102,7 @@
     seasonLabels = results;
   }
 
-  /** Called by the parent's animation loop */
+  /** Render one frame. Called from the component's own rAF loop. */
   export function render() {
     if (!orreryScene || !controls) return;
 
@@ -182,7 +182,16 @@
     });
     resizeObserver.observe(container);
 
+    // Self-driving render loop — no dependency on parent $state refs
+    let frameId = 0;
+    function loop() {
+      frameId = requestAnimationFrame(loop);
+      render();
+    }
+    frameId = requestAnimationFrame(loop);
+
     return () => {
+      cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       controls?.dispose();
       orreryScene?.dispose();

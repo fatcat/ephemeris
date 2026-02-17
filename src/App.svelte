@@ -7,14 +7,12 @@
   import SettingsPanel from './lib/components/SettingsPanel.svelte';
   import SunInfo from './lib/components/SunInfo.svelte';
   import { loadEarthTexture, loadNightTexture } from './lib/three/scene.js';
-  import { tick } from './lib/stores/time.js';
+  import { tick, playbackMode, isPlaying, playbackSpeed } from './lib/stores/time.js';
   import { showGlobe, showProjection, showOrrery, showSunInfo } from './lib/stores/settings.js';
 
   let sharedTexture: Texture | null = $state(null);
   let nightTexture: Texture | null = $state(null);
   let globeRef: Globe | undefined = $state();
-  let projRef: Projection | undefined = $state();
-  let orreryRef: Orrery | undefined = $state();
   let animationId = 0;
   let lastFrameTime = 0;
   let errorMessage: string | null = $state(null);
@@ -94,6 +92,16 @@
     } catch { return false; }
   }
 
+  // Time-advancement loop. Each view component drives its own rAF render
+  // loop internally (started in its onMount), so the parent only handles
+  // time progression — no cross-component $state refs needed.
+  function advanceTime(now: number) {
+    animationId = requestAnimationFrame(advanceTime);
+    const deltaSec = Math.min((now - lastFrameTime) / 1000, 0.1);
+    lastFrameTime = now;
+    tick(deltaSec);
+  }
+
   onMount(() => {
     if (!hasWebGL()) {
       errorMessage = 'This app requires WebGL. Please use a modern browser.';
@@ -108,16 +116,16 @@
       nightTexture = nightTex;
 
       lastFrameTime = performance.now();
-      function animate(now: number) {
-        animationId = requestAnimationFrame(animate);
-        const deltaSec = Math.min((now - lastFrameTime) / 1000, 0.1);
-        lastFrameTime = now;
-        tick(deltaSec);
-        if (globeVisible) globeRef?.render();
-        if (projVisible) projRef?.render();
-        if (orreryVisible) orreryRef?.render();
-      }
-      animationId = requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(advanceTime);
+
+      // Brute-force kick: switch from realtime to smooth mode after a
+      // short delay so the Three.js views start animating immediately.
+      // Mirrors the manual "pause → play" workaround.
+      setTimeout(() => {
+        playbackMode.set('smooth');
+        playbackSpeed.set(1);
+        isPlaying.set(true);
+      }, 100);
     }).catch(() => {
       errorMessage = 'Failed to load Earth textures. Please reload the page.';
     });
@@ -166,9 +174,9 @@
               title="Reset view"
             >&#8962;</button>
           {:else if view === 'projection'}
-            <Projection bind:this={projRef} {sharedTexture} {nightTexture} />
+            <Projection {sharedTexture} {nightTexture} />
           {:else if view === 'orrery'}
-            <Orrery bind:this={orreryRef} {sharedTexture} {nightTexture} />
+            <Orrery {sharedTexture} {nightTexture} />
           {/if}
         </section>
       {/each}

@@ -154,19 +154,22 @@ export function createOrreryScene(
 
   // Grid lines (equator, tropics, arctic circles, major/minor)
   // The grid is built for radius ~1.003; scale to match EARTH_RADIUS.
+  // Added to earthMesh so grid lines rotate with the texture.
   const grid = createGlobeGrid();
   grid.group.scale.setScalar(EARTH_RADIUS);
-  earthTiltGroup.add(grid.group);
+  earthMesh.add(grid.group);
 
   // Subsolar point marker (scaled down)
+  // Added to earthMesh because sunDirection is computed in mesh-local space.
   const sunMarker = createSunMarkerGlobe(0.1);
   sunMarker.scale.setScalar(EARTH_RADIUS);
-  earthTiltGroup.add(sunMarker);
+  earthMesh.add(sunMarker);
 
   // Location marker (scaled down)
+  // Added to earthMesh so it rotates with the texture (stays fixed on its location).
   const locationMarker = createLocationMarkerGlobe(0.08);
   locationMarker.scale.setScalar(EARTH_RADIUS);
-  earthTiltGroup.add(locationMarker);
+  earthMesh.add(locationMarker);
 
   // Barber pole pins at the poles (scaled down)
   const polePins = createPolePins();
@@ -194,8 +197,11 @@ export function createOrreryScene(
     const [x, z] = orbitPosition(earthAngle);
     earthOrbitGroup.position.set(x, 0, z);
 
-    // Apply axial tilt (fixed direction in world space)
-    earthTiltGroup.rotation.z = -tiltRad;
+    // Apply axial tilt (fixed direction in world space).
+    // Rotation around X tilts the north pole (Y) toward -Z, which aligns
+    // with the orbit convention: Jun Solstice Earth is at +Z, so the pole
+    // tilts toward the Sun (at origin) in summer, and away in winter.
+    earthTiltGroup.rotation.x = -tiltRad;
 
     // Daily rotation — GMST determines which longitude faces which direction
     earthMesh.rotation.y = earthRotation;

@@ -155,7 +155,7 @@
     });
   }
 
-  /** Called by the parent's animation loop */
+  /** Render one frame. Called from the component's own rAF loop. */
   export function render() {
     if (!projScene) return;
     const sunDir = getSunDirection();
@@ -208,7 +208,16 @@
     });
     resizeObserver.observe(container);
 
+    // Self-driving render loop — no dependency on parent $state refs
+    let frameId = 0;
+    function loop() {
+      frameId = requestAnimationFrame(loop);
+      render();
+    }
+    frameId = requestAnimationFrame(loop);
+
     return () => {
+      cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       projScene?.dispose();
     };

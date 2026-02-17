@@ -18,8 +18,8 @@ export function createOrreryControls(
   controls.enablePan = false;
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.minDistance = 1;
-  controls.maxDistance = 14;
+  controls.minDistance = 0.5;
+  controls.maxDistance = 2;
   // Polar angle PI/2 = ecliptic plane. Clamp ±30° above/below.
   controls.minPolarAngle = Math.PI / 2 - Math.PI / 6; // 60° from top = 30° above ecliptic
   controls.maxPolarAngle = Math.PI / 2 + Math.PI / 6; // 120° from top = 30° below ecliptic
