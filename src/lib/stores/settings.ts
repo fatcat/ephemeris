@@ -8,8 +8,6 @@ import { applyTheme, getThemeById } from '../themes.js';
 
 const STORAGE_KEY = 'ephemeris-settings';
 
-export type ViewMode = 'globe' | 'projection' | 'both';
-
 export interface UserLocation {
   name: string;
   lat: number;
@@ -37,7 +35,9 @@ interface Settings {
   showNightLights: boolean;
   showSunInfo: boolean;
   useLocalTime: boolean;
-  viewMode: ViewMode;
+  showGlobe: boolean;
+  showProjection: boolean;
+  showOrrery: boolean;
   location: UserLocation;
   recentLocations: UserLocation[];
 }
@@ -58,7 +58,9 @@ const defaults: Settings = {
   showNightLights: true,
   showSunInfo: true,
   useLocalTime: true,
-  viewMode: 'both',
+  showGlobe: true,
+  showProjection: true,
+  showOrrery: false,
   location: { name: '', lat: 0, lon: 0 },
   recentLocations: [],
 };
@@ -66,7 +68,18 @@ const defaults: Settings = {
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...defaults, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Migrate old viewMode enum to independent booleans
+      if ('viewMode' in parsed && !('showGlobe' in parsed)) {
+        const vm = parsed.viewMode as string;
+        parsed.showGlobe = vm === 'globe' || vm === 'both';
+        parsed.showProjection = vm === 'projection' || vm === 'both';
+        parsed.showOrrery = false;
+        delete parsed.viewMode;
+      }
+      return { ...defaults, ...parsed };
+    }
   } catch {
     // ignore
   }
@@ -102,7 +115,9 @@ export const showSubsolarPoint = writable<boolean>(initial.showSubsolarPoint);
 export const showNightLights = writable<boolean>(initial.showNightLights);
 export const showSunInfo = writable<boolean>(initial.showSunInfo);
 export const useLocalTime = writable<boolean>(initial.useLocalTime);
-export const viewMode = writable<ViewMode>(initial.viewMode);
+export const showGlobe = writable<boolean>(initial.showGlobe);
+export const showProjection = writable<boolean>(initial.showProjection);
+export const showOrrery = writable<boolean>(initial.showOrrery);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
 
@@ -194,9 +209,21 @@ useLocalTime.subscribe((v) => {
   saveSettings(s);
 });
 
-viewMode.subscribe((v) => {
+showGlobe.subscribe((v) => {
   const s = loadSettings();
-  s.viewMode = v;
+  s.showGlobe = v;
+  saveSettings(s);
+});
+
+showProjection.subscribe((v) => {
+  const s = loadSettings();
+  s.showProjection = v;
+  saveSettings(s);
+});
+
+showOrrery.subscribe((v) => {
+  const s = loadSettings();
+  s.showOrrery = v;
   saveSettings(s);
 });
 

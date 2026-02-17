@@ -20,6 +20,20 @@ const OUTPUT_PATH = join(__dirname, '..', 'src', 'assets', 'geo', 'places.json')
 const SOURCE_URL =
   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_populated_places_simple.geojson';
 
+// Custom places that aren't in Natural Earth or need exact coordinates.
+// Format: [name, country, lat, lon]
+const CUSTOM_PLACES = [
+  ['Peachtree City GA', 'United States of America', 33.3968, -84.5963],
+  ['North Pole', '', 90, 0],
+  ['South Pole', '', -90, 0],
+  ['Null Island', '', 0, 0],
+  ['Longyearbyen', 'Norway', 78.22, 15.64],
+  ['Ushuaia', 'Argentina', -54.80, -68.30],
+  ['Quito', 'Ecuador', -0.18, -78.47],
+  ['Tropic of Cancer', 'Mexico', 23.44, -104.00],
+  ['Tropic of Capricorn', 'Brazil', -23.44, -46.63],
+];
+
 async function main() {
   console.log('Downloading Natural Earth populated places...');
   const res = await fetch(SOURCE_URL);
@@ -43,10 +57,17 @@ async function main() {
   // Convert to compact tuple format: [name, country, lat, lon]
   const tuples = places.map((p) => [p.name, p.country, p.lat, p.lon]);
 
-  writeFileSync(OUTPUT_PATH, JSON.stringify(tuples));
+  // Merge custom places, replacing any Natural Earth duplicates by name
+  const customNames = new Set(CUSTOM_PLACES.map((p) => p[0]));
+  const merged = [
+    ...tuples.filter((t) => !customNames.has(t[0])),
+    ...CUSTOM_PLACES,
+  ];
 
-  const sizeKB = (Buffer.byteLength(JSON.stringify(tuples)) / 1024).toFixed(0);
-  console.log(`Wrote ${tuples.length} places to ${OUTPUT_PATH} (${sizeKB} KB)`);
+  writeFileSync(OUTPUT_PATH, JSON.stringify(merged));
+
+  const sizeKB = (Buffer.byteLength(JSON.stringify(merged)) / 1024).toFixed(0);
+  console.log(`Wrote ${merged.length} places (${CUSTOM_PLACES.length} custom) to ${OUTPUT_PATH} (${sizeKB} KB)`);
 }
 
 main().catch((err) => {

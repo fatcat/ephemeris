@@ -3,42 +3,88 @@
   import type { Texture } from 'three';
   import Globe from './lib/components/Globe.svelte';
   import Projection from './lib/components/Projection.svelte';
+  import Orrery from './lib/components/Orrery.svelte';
   import SettingsPanel from './lib/components/SettingsPanel.svelte';
   import SunInfo from './lib/components/SunInfo.svelte';
   import { loadEarthTexture, loadNightTexture } from './lib/three/scene.js';
   import { tick } from './lib/stores/time.js';
-  import { viewMode, showSunInfo, type ViewMode } from './lib/stores/settings.js';
+  import { showGlobe, showProjection, showOrrery, showSunInfo } from './lib/stores/settings.js';
 
   let sharedTexture: Texture | null = $state(null);
   let nightTexture: Texture | null = $state(null);
   let globeRef: Globe | undefined = $state();
   let projRef: Projection | undefined = $state();
+  let orreryRef: Orrery | undefined = $state();
   let animationId = 0;
   let lastFrameTime = 0;
-  let currentViewMode: ViewMode = $state('both');
   let errorMessage: string | null = $state(null);
-  let splitRatio = $state(0.5);
-  let isDraggingSplit = $state(false);
-  let viewsColumnEl: HTMLElement = $state(undefined as unknown as HTMLElement);
   let sunInfoVisible = $state(true);
-  viewMode.subscribe((v) => (currentViewMode = v));
+
+  let globeVisible = $state(true);
+  let projVisible = $state(true);
+  let orreryVisible = $state(false);
+  showGlobe.subscribe((v) => (globeVisible = v));
+  showProjection.subscribe((v) => (projVisible = v));
+  showOrrery.subscribe((v) => (orreryVisible = v));
   showSunInfo.subscribe((v) => (sunInfoVisible = v));
 
-  function onSplitPointerDown(e: PointerEvent) {
-    isDraggingSplit = true;
+  // Collect active views as an ordered list for layout
+  let activeViews = $derived(
+    (['globe', 'projection', 'orrery'] as const).filter(
+      (v) => v === 'globe' ? globeVisible : v === 'projection' ? projVisible : orreryVisible,
+    ),
+  );
+
+  // Split ratios: flex proportions for each view section.
+  // splitRatios[i] is the flex weight of view i. Sum = 1.
+  // Reset to equal splits when the view count changes.
+  let splitRatios = $state([0.5, 0.5]);
+  let prevViewCount = 2;
+
+  $effect(() => {
+    const n = activeViews.length;
+    if (n !== prevViewCount) {
+      splitRatios = Array(n).fill(1 / n);
+      prevViewCount = n;
+    }
+  });
+
+  // Split handle dragging
+  let viewsColumnEl: HTMLElement = $state(undefined as unknown as HTMLElement);
+  let draggingHandle = $state(-1); // index of the handle being dragged (-1 = none)
+
+  function onSplitPointerDown(index: number, e: PointerEvent) {
+    draggingHandle = index;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   function onSplitPointerMove(e: PointerEvent) {
-    if (!isDraggingSplit || !viewsColumnEl) return;
+    if (draggingHandle < 0 || !viewsColumnEl) return;
     const rect = viewsColumnEl.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const ratio = Math.max(0.33, Math.min(0.67, y / rect.height));
-    splitRatio = ratio;
+    const ratio = y / rect.height;
+
+    // Compute where the handle should split: handle i sits between view i and i+1.
+    // Sum of ratios for views 0..i = ratio, and views i+1..n = 1 - ratio.
+    const n = splitRatios.length;
+    const minFlex = 0.15; // minimum proportion per view
+
+    // Sum of ratios before the handle
+    let before = Math.max(minFlex * (draggingHandle + 1), Math.min(1 - minFlex * (n - draggingHandle - 1), ratio));
+    // Distribute evenly among views before and after the handle
+    const newRatios = [...splitRatios];
+    const beforeCount = draggingHandle + 1;
+    const afterCount = n - beforeCount;
+    const perBefore = before / beforeCount;
+    const perAfter = (1 - before) / afterCount;
+
+    for (let i = 0; i < beforeCount; i++) newRatios[i] = perBefore;
+    for (let i = beforeCount; i < n; i++) newRatios[i] = perAfter;
+    splitRatios = newRatios;
   }
 
   function onSplitPointerUp() {
-    isDraggingSplit = false;
+    draggingHandle = -1;
   }
 
   function hasWebGL(): boolean {
@@ -67,8 +113,9 @@
         const deltaSec = Math.min((now - lastFrameTime) / 1000, 0.1);
         lastFrameTime = now;
         tick(deltaSec);
-        globeRef?.render();
-        projRef?.render();
+        if (globeVisible) globeRef?.render();
+        if (projVisible) projRef?.render();
+        if (orreryVisible) orreryRef?.render();
       }
       animationId = requestAnimationFrame(animate);
     }).catch(() => {
@@ -92,38 +139,39 @@
 <div class="app-layout">
   <main class="views-column" bind:this={viewsColumnEl}>
     {#if sharedTexture && nightTexture}
-      {#if currentViewMode === 'globe' || currentViewMode === 'both'}
-        <section class="globe-section" style={currentViewMode === 'both' ? `flex: ${splitRatio}` : ''}>
-          <Globe bind:this={globeRef} {sharedTexture} {nightTexture} />
-          {#if sunInfoVisible}
-            <div class="sun-info-overlay">
-              <SunInfo />
-            </div>
+      {#each activeViews as view, i (view)}
+        {#if i > 0}
+          <div
+            class="split-handle"
+            role="separator"
+            aria-label="Resize views"
+            onpointerdown={(e) => onSplitPointerDown(i - 1, e)}
+            onpointermove={onSplitPointerMove}
+            onpointerup={onSplitPointerUp}
+            onpointercancel={onSplitPointerUp}
+          ></div>
+        {/if}
+        <section class="view-cell" style="flex: {splitRatios[i] ?? 1}">
+          {#if view === 'globe'}
+            <Globe bind:this={globeRef} {sharedTexture} {nightTexture} />
+            {#if sunInfoVisible}
+              <div class="sun-info-overlay">
+                <SunInfo />
+              </div>
+            {/if}
+            <button
+              class="reset-view-btn"
+              onclick={() => globeRef?.resetView()}
+              aria-label="Reset globe view to saved location"
+              title="Reset view"
+            >&#8962;</button>
+          {:else if view === 'projection'}
+            <Projection bind:this={projRef} {sharedTexture} {nightTexture} />
+          {:else if view === 'orrery'}
+            <Orrery bind:this={orreryRef} {sharedTexture} {nightTexture} />
           {/if}
-          <button
-            class="reset-view-btn"
-            onclick={() => globeRef?.resetView()}
-            aria-label="Reset globe view to saved location"
-            title="Reset view"
-          >&#8962;</button>
         </section>
-      {/if}
-      {#if currentViewMode === 'both'}
-        <div
-          class="split-handle"
-          role="separator"
-          aria-label="Resize globe and projection"
-          onpointerdown={onSplitPointerDown}
-          onpointermove={onSplitPointerMove}
-          onpointerup={onSplitPointerUp}
-          onpointercancel={onSplitPointerUp}
-        ></div>
-      {/if}
-      {#if currentViewMode === 'projection' || currentViewMode === 'both'}
-        <section class="projection-section" style={currentViewMode === 'both' ? `flex: ${1 - splitRatio}` : ''}>
-          <Projection bind:this={projRef} {sharedTexture} {nightTexture} />
-        </section>
-      {/if}
+      {/each}
     {/if}
   </main>
   <aside class="settings-aside">
@@ -158,12 +206,45 @@
     min-height: 0;
   }
 
-  .globe-section {
+  .view-cell {
     flex: 1;
     display: flex;
     min-height: 0;
     min-width: 0;
     position: relative;
+    overflow: hidden;
+  }
+
+  .split-handle {
+    flex-shrink: 0;
+    height: 6px;
+    background: var(--color-border);
+    cursor: row-resize;
+    position: relative;
+    touch-action: none;
+  }
+
+  .split-handle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  .split-handle:hover,
+  .split-handle:active {
+    background: var(--color-accent);
+  }
+
+  .split-handle:hover::after,
+  .split-handle:active::after {
+    opacity: 0.8;
   }
 
   .sun-info-overlay {
@@ -201,44 +282,6 @@
   .reset-view-btn:hover {
     color: var(--color-accent);
     border-color: var(--color-accent);
-  }
-
-  .projection-section {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-  }
-
-  .split-handle {
-    flex-shrink: 0;
-    height: 6px;
-    background: var(--color-border);
-    cursor: row-resize;
-    position: relative;
-    touch-action: none;
-  }
-
-  .split-handle::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 2rem;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--color-text-muted);
-    opacity: 0.5;
-  }
-
-  .split-handle:hover,
-  .split-handle:active {
-    background: var(--color-accent);
-  }
-
-  .split-handle:hover::after,
-  .split-handle:active::after {
-    opacity: 0.8;
   }
 
   .settings-aside {

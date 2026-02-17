@@ -5,29 +5,42 @@
   import Controls from './Controls.svelte';
   import LocationInput from './LocationInput.svelte';
   import SettingsPopover from './SettingsPopover.svelte';
+  import { get } from 'svelte/store';
   import {
     hardTerminator,
-    viewMode,
+    showGlobe,
+    showProjection,
+    showOrrery,
     cameraLatitude,
     userLocation,
-    type ViewMode,
     type UserLocation,
   } from '../stores/settings.js';
 
   let hard = $state(false);
-  let currentViewMode: ViewMode = $state('both');
+  let globeOn = $state(true);
+  let projOn = $state(true);
+  let orreryOn = $state(false);
   let camLat = $state(0);
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
   let gearOpen = $state(false);
   let gearBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
 
   hardTerminator.subscribe((v) => (hard = v));
-  viewMode.subscribe((v) => (currentViewMode = v));
+  showGlobe.subscribe((v) => (globeOn = v));
+  showProjection.subscribe((v) => (projOn = v));
+  showOrrery.subscribe((v) => (orreryOn = v));
   cameraLatitude.subscribe((v) => (camLat = v));
   userLocation.subscribe((v) => (loc = v));
 
-  function setViewMode(mode: ViewMode) {
-    viewMode.set(mode);
+  /** Toggle a view store, but prevent turning off the last active view. */
+  function toggleView(store: typeof showGlobe) {
+    const current = get(store);
+    if (current) {
+      // Don't allow turning off if it's the only one on
+      const activeCount = (+get(showGlobe)) + (+get(showProjection)) + (+get(showOrrery));
+      if (activeCount <= 1) return;
+    }
+    store.set(!current);
   }
 </script>
 
@@ -77,31 +90,34 @@
 
   <div class="panel-section view-terminator-row">
     <div class="labeled-group">
-      <span class="group-label">Display</span>
-      <div class="view-toggle" role="group" aria-label="View mode">
+      <span class="group-label">Views</span>
+      <div class="view-toggle" role="group" aria-label="Toggle views">
         <button
           class="btn btn-vt"
-          class:active={currentViewMode === 'globe'}
-          onclick={() => setViewMode('globe')}
-          aria-label="Show globe only"
+          class:active={globeOn}
+          onclick={() => toggleView(showGlobe)}
+          aria-label="Toggle globe view"
+          aria-pressed={globeOn}
         >
           Globe
         </button>
         <button
           class="btn btn-vt"
-          class:active={currentViewMode === 'both'}
-          onclick={() => setViewMode('both')}
-          aria-label="Show globe and projection"
+          class:active={projOn}
+          onclick={() => toggleView(showProjection)}
+          aria-label="Toggle projection view"
+          aria-pressed={projOn}
         >
-          Both
+          Proj
         </button>
         <button
           class="btn btn-vt"
-          class:active={currentViewMode === 'projection'}
-          onclick={() => setViewMode('projection')}
-          aria-label="Show projection only"
+          class:active={orreryOn}
+          onclick={() => toggleView(showOrrery)}
+          aria-label="Toggle orrery view"
+          aria-pressed={orreryOn}
         >
-          Proj
+          Orrery
         </button>
       </div>
     </div>
