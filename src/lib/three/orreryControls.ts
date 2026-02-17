@@ -26,7 +26,14 @@ export function createOrreryControls(
   return controls;
 }
 
-/** Update the controls target to track Earth's position. */
+/** Update the controls target to track Earth's position, moving the camera
+ *  by the same delta so the relative distance and angle are preserved. */
 export function updateOrreryTarget(controls: OrbitControls, earthPos: Vector3): void {
+  const dx = earthPos.x - controls.target.x;
+  const dy = earthPos.y - controls.target.y;
+  const dz = earthPos.z - controls.target.z;
   controls.target.copy(earthPos);
+  controls.object.position.x += dx;
+  controls.object.position.y += dy;
+  controls.object.position.z += dz;
 }
