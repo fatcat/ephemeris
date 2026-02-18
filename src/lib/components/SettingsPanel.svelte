@@ -5,6 +5,7 @@
   import Controls from './Controls.svelte';
   import LocationInput from './LocationInput.svelte';
   import SettingsPopover from './SettingsPopover.svelte';
+  import AboutPopover from './AboutPopover.svelte';
   import { get } from 'svelte/store';
   import {
     hardTerminator,
@@ -23,7 +24,9 @@
   let camLat = $state(0);
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
   let gearOpen = $state(false);
+  let aboutOpen = $state(false);
   let gearBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
+  let aboutBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
 
   hardTerminator.subscribe((v) => (hard = v));
   showGlobe.subscribe((v) => (globeOn = v));
@@ -48,10 +51,18 @@
   <div class="panel-header">
     <h1 class="panel-title">Ephemeris</h1>
     <button
-      class="gear-btn"
+      class="header-icon-btn"
+      class:active={aboutOpen}
+      bind:this={aboutBtnEl}
+      onclick={() => { aboutOpen = !aboutOpen; if (aboutOpen) gearOpen = false; }}
+      aria-label="About"
+      aria-expanded={aboutOpen}
+    >?</button>
+    <button
+      class="header-icon-btn"
       class:active={gearOpen}
       bind:this={gearBtnEl}
-      onclick={() => (gearOpen = !gearOpen)}
+      onclick={() => { gearOpen = !gearOpen; if (gearOpen) aboutOpen = false; }}
       aria-label="Settings"
       aria-expanded={gearOpen}
     >
@@ -59,6 +70,9 @@
         <path d="M11.078 0l.294 2.18a7.725 7.725 0 011.85.764l1.681-1.395 1.548 1.548-1.395 1.68c.334.576.59 1.196.764 1.851L18 6.922v2.156l-2.18.294a7.725 7.725 0 01-.764 1.85l1.395 1.681-1.548 1.548-1.68-1.395a7.725 7.725 0 01-1.851.764L11.078 16H8.922l-.294-2.18a7.725 7.725 0 01-1.85-.764l-1.681 1.395-1.548-1.548 1.395-1.68a7.725 7.725 0 01-.764-1.851L2 9.078V6.922l2.18-.294a7.725 7.725 0 01.764-1.85L3.549 3.097 5.097 1.55l1.68 1.395a7.725 7.725 0 011.851-.764L8.922 0h2.156zM10 6a2 2 0 100 4 2 2 0 000-4z" transform="translate(0 2)"/>
       </svg>
     </button>
+    {#if aboutOpen}
+      <AboutPopover onclose={() => (aboutOpen = false)} {aboutBtnEl} />
+    {/if}
     {#if gearOpen}
       <SettingsPopover onclose={() => (gearOpen = false)} {gearBtnEl} />
     {/if}
@@ -224,7 +238,7 @@
     color: var(--color-text);
   }
 
-  .gear-btn {
+  .header-icon-btn {
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -235,17 +249,19 @@
     border-radius: 6px;
     background: none;
     color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
     transition: color 0.15s, background-color 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .gear-btn:hover {
+  .header-icon-btn:hover {
     color: var(--color-accent);
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .gear-btn.active {
+  .header-icon-btn.active {
     color: var(--color-accent);
   }
 

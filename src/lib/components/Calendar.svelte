@@ -1,5 +1,7 @@
 <script lang="ts">
   import { currentTime, setTime } from '../stores/time.js';
+  import { useLocalTime, userTimezone } from '../stores/settings.js';
+  import { getUtcOffsetMs } from '../utils/timezone.js';
 
   const MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -13,10 +15,22 @@
   let selectedMonth: number = $state(new Date().getUTCMonth());
   let selectedDay: number = $state(new Date().getUTCDate());
 
+  let localTime = $state(false);
+  let tz = $state('Etc/UTC');
+  useLocalTime.subscribe((v) => (localTime = v));
+  userTimezone.subscribe((v) => (tz = v));
+
+  /** Return the display date, adjusted for timezone when local time is enabled. */
+  function displayDate(t: Date): Date {
+    if (!localTime) return t;
+    return new Date(t.getTime() + getUtcOffsetMs(t, tz));
+  }
+
   currentTime.subscribe((t) => {
-    selectedYear = t.getUTCFullYear();
-    selectedMonth = t.getUTCMonth();
-    selectedDay = t.getUTCDate();
+    const d = displayDate(t);
+    selectedYear = d.getUTCFullYear();
+    selectedMonth = d.getUTCMonth();
+    selectedDay = d.getUTCDate();
     viewYear = selectedYear;
     viewMonth = selectedMonth;
   });
@@ -43,7 +57,7 @@
   }
 
   function isToday(day: number): boolean {
-    const now = new Date();
+    const now = displayDate(new Date());
     return day === now.getUTCDate() && viewMonth === now.getUTCMonth() && viewYear === now.getUTCFullYear();
   }
 

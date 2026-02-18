@@ -38,6 +38,7 @@ interface Settings {
   showGlobe: boolean;
   showProjection: boolean;
   showOrrery: boolean;
+  showSettingsPanel: boolean;
   location: UserLocation;
   recentLocations: UserLocation[];
 }
@@ -61,6 +62,7 @@ const defaults: Settings = {
   showGlobe: true,
   showProjection: true,
   showOrrery: false,
+  showSettingsPanel: true,
   location: { name: '', lat: 0, lon: 0 },
   recentLocations: [],
 };
@@ -118,6 +120,7 @@ export const useLocalTime = writable<boolean>(initial.useLocalTime);
 export const showGlobe = writable<boolean>(initial.showGlobe);
 export const showProjection = writable<boolean>(initial.showProjection);
 export const showOrrery = writable<boolean>(initial.showOrrery);
+export const showSettingsPanel = writable<boolean>(initial.showSettingsPanel);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
 
@@ -224,6 +227,12 @@ showProjection.subscribe((v) => {
 showOrrery.subscribe((v) => {
   const s = loadSettings();
   s.showOrrery = v;
+  saveSettings(s);
+});
+
+showSettingsPanel.subscribe((v) => {
+  const s = loadSettings();
+  s.showSettingsPanel = v;
   saveSettings(s);
 });
 

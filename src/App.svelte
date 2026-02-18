@@ -8,7 +8,7 @@
   import SunInfo from './lib/components/SunInfo.svelte';
   import { loadEarthTexture, loadNightTexture } from './lib/three/scene.js';
   import { tick, playbackMode, isPlaying, playbackSpeed } from './lib/stores/time.js';
-  import { showGlobe, showProjection, showOrrery, showSunInfo } from './lib/stores/settings.js';
+  import { showGlobe, showProjection, showOrrery, showSunInfo, showSettingsPanel } from './lib/stores/settings.js';
 
   let sharedTexture: Texture | null = $state(null);
   let nightTexture: Texture | null = $state(null);
@@ -17,6 +17,7 @@
   let lastFrameTime = 0;
   let errorMessage: string | null = $state(null);
   let sunInfoVisible = $state(true);
+  let panelVisible = $state(true);
 
   let globeVisible = $state(true);
   let projVisible = $state(true);
@@ -25,6 +26,7 @@
   showProjection.subscribe((v) => (projVisible = v));
   showOrrery.subscribe((v) => (orreryVisible = v));
   showSunInfo.subscribe((v) => (sunInfoVisible = v));
+  showSettingsPanel.subscribe((v) => (panelVisible = v));
 
   // Collect active views as an ordered list for layout
   let activeViews = $derived(
@@ -146,6 +148,11 @@
 {:else}
 <div class="app-layout">
   <main class="views-column" bind:this={viewsColumnEl}>
+    {#if sunInfoVisible}
+      <div class="sun-info-bar">
+        <SunInfo />
+      </div>
+    {/if}
     {#if sharedTexture && nightTexture}
       {#each activeViews as view, i (view)}
         {#if i > 0}
@@ -162,11 +169,6 @@
         <section class="view-cell" style="flex: {splitRatios[i] ?? 1}">
           {#if view === 'globe'}
             <Globe bind:this={globeRef} {sharedTexture} {nightTexture} />
-            {#if sunInfoVisible}
-              <div class="sun-info-overlay">
-                <SunInfo />
-              </div>
-            {/if}
             <button
               class="reset-view-btn"
               onclick={() => globeRef?.resetView()}
@@ -182,9 +184,19 @@
       {/each}
     {/if}
   </main>
-  <aside class="settings-aside">
-    <SettingsPanel />
-  </aside>
+  <button
+    class="panel-toggle"
+    onclick={() => showSettingsPanel.set(!panelVisible)}
+    aria-label={panelVisible ? 'Hide settings panel' : 'Show settings panel'}
+    title={panelVisible ? 'Hide settings' : 'Show settings'}
+  >
+    {panelVisible ? '\u203A' : '\u2039'}
+  </button>
+  {#if panelVisible}
+    <aside class="settings-aside">
+      <SettingsPanel />
+    </aside>
+  {/if}
 </div>
 {/if}
 
@@ -255,16 +267,11 @@
     opacity: 0.8;
   }
 
-  .sun-info-overlay {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 2;
-    background: var(--color-overlay-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 0.4rem 0.6rem;
-    max-width: 14rem;
+  .sun-info-bar {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: 0.3rem 0.8rem;
     overflow: hidden;
   }
 
@@ -290,6 +297,27 @@
   .reset-view-btn:hover {
     color: var(--color-accent);
     border-color: var(--color-accent);
+  }
+
+  .panel-toggle {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .panel-toggle:hover {
+    color: var(--color-accent);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .settings-aside {

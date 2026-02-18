@@ -47,8 +47,8 @@ const fragmentShader = /* glsl */ `
     // Sun angle: 1.0 = directly facing sun, -1.0 = directly away
     float sunAngle = dot(n, sunDir);
 
-    // Day factor: soft (smooth twilight) or hard (anti-aliased sharp edge)
-    float softDay = smoothstep(-0.309, 0.05, sunAngle);
+    // Day factor: soft (narrow twilight band) or hard (anti-aliased sharp edge)
+    float softDay = smoothstep(-0.15, 0.01, sunAngle);
     // Use fwidth() for a crisp but anti-aliased 1-pixel-wide transition
     float fw = fwidth(sunAngle);
     float hardDay = smoothstep(-fw, fw, sunAngle);
@@ -66,11 +66,14 @@ const fragmentShader = /* glsl */ `
     // Blend between night and day
     vec3 color = mix(nightColor, dayColor.rgb, dayFactor);
 
-    // Add slight warmth to the twilight zone (only in soft mode)
+    // Warm tint in the twilight zone (only in soft mode).
+    // Centered in the dim part of the transition where dayFactor is low,
+    // blended (not added) so it never brightens beyond the day side.
     float twilightFactor = (1.0 - uHardTerminator)
-      * smoothstep(-0.309, 0.0, sunAngle)
-      * smoothstep(0.15, 0.0, sunAngle);
-    color += vec3(0.08, 0.03, 0.0) * twilightFactor;
+      * smoothstep(-0.15, -0.07, sunAngle)
+      * smoothstep(0.01, -0.07, sunAngle);
+    vec3 warmTint = mix(color, color + vec3(0.08, 0.03, 0.0), twilightFactor);
+    color = mix(color, warmTint, 1.0 - dayFactor);
 
     gl_FragColor = vec4(color, 1.0);
   }

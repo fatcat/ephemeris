@@ -217,6 +217,7 @@
       {/if}
     {/each}
   </div>
+  <span class="not-to-scale">Not to Scale</span>
 </div>
 
 <style>
@@ -236,6 +237,18 @@
   .orrery-labels {
     position: absolute;
     inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .not-to-scale {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    font-style: italic;
+    color: rgba(230, 230, 240, 0.7);
     pointer-events: none;
     z-index: 1;
   }

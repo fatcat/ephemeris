@@ -2,8 +2,8 @@ services:
   ephemeris:
     build: .
     ports:
-      - "8181:8080"
-      - "8443:8443"
+      - "80:8080"
+      - "443:8443"
     volumes:
       - ./certs:/certs:ro
     restart: unless-stopped

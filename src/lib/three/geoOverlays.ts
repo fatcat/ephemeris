@@ -50,7 +50,7 @@ const globeLineFragmentShader = /* glsl */ `
 
   void main() {
     float sunAngle = dot(normalize(vObjNormal), normalize(uSunDirection));
-    float dayFactor = smoothstep(-0.309, 0.05, sunAngle);
+    float dayFactor = smoothstep(-0.15, 0.01, sunAngle);
     float brightness = mix(0.15, 1.0, dayFactor);
     gl_FragColor = vec4(uLineColor * brightness, uOpacity);
   }
@@ -86,7 +86,7 @@ const projLineFragmentShader = /* glsl */ `
 
   void main() {
     float sunAngle = dot(normalize(vReconstructedNormal), normalize(uSunDirection));
-    float dayFactor = smoothstep(-0.309, 0.05, sunAngle);
+    float dayFactor = smoothstep(-0.15, 0.01, sunAngle);
     float brightness = mix(0.15, 1.0, dayFactor);
     gl_FragColor = vec4(uLineColor * brightness, uOpacity);
   }

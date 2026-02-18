@@ -36,7 +36,7 @@
   }
 
   function formatAngle(deg: number): string {
-    return `${deg.toFixed(1)}°`;
+    return `${deg.toFixed(2)}°`;
   }
 
   function azimuthCardinal(deg: number): string {
@@ -61,44 +61,20 @@
   <div class="sun-header">
     Sun Data: {loc.name || `${formatLat(loc.lat)}, ${formatLon(loc.lon)}`}
   </div>
-
-  <div class="sun-grid">
-    <span class="sun-label">Elevation</span>
-    <span class="sun-value">{formatAngle(sunData.elevation)}</span>
-
-    <span class="sun-label">Azimuth</span>
-    <span class="sun-value">{formatAngle(sunData.azimuth)} {azimuthCardinal(sunData.azimuth)}</span>
-
-    <span class="sun-label">Sunrise</span>
-    <span class="sun-value">
-      {#if sunData.sunrise}
-        {formatTime(sunData.sunrise)} {timeLabel}
-      {:else if sunData.dayLength >= 24}
-        No sunrise (24h sun)
-      {:else}
-        No sunrise
-      {/if}
+  <div class="sun-data">
+    <span class="sun-item"><span class="sun-label">Elevation</span> <span class="sun-value">{formatAngle(sunData.elevation)}</span></span>
+    <span class="sun-item"><span class="sun-label">Azimuth</span> <span class="sun-value">{formatAngle(sunData.azimuth)} {azimuthCardinal(sunData.azimuth)}</span></span>
+    <span class="sun-item">
+      <span class="sun-label">Sunrise</span>
+      <span class="sun-value">{#if sunData.sunrise}{formatTime(sunData.sunrise)} {timeLabel}{:else if sunData.dayLength >= 24}—{:else}—{/if}</span>
     </span>
-
-    <span class="sun-label">Sunset</span>
-    <span class="sun-value">
-      {#if sunData.sunset}
-        {formatTime(sunData.sunset)} {timeLabel}
-      {:else if sunData.dayLength >= 24}
-        No sunset (24h sun)
-      {:else}
-        No sunset
-      {/if}
+    <span class="sun-item">
+      <span class="sun-label">Sunset</span>
+      <span class="sun-value">{#if sunData.sunset}{formatTime(sunData.sunset)} {timeLabel}{:else if sunData.dayLength >= 24}—{:else}—{/if}</span>
     </span>
-
-    <span class="sun-label">Day Length</span>
-    <span class="sun-value">{formatDayLength(sunData.dayLength)}</span>
-
-    <span class="sun-label">Solar Noon</span>
-    <span class="sun-value">{formatTime(sunData.solarNoon)} {timeLabel}</span>
-
-    <span class="sun-label">Status</span>
-    <span class="sun-value sun-status">{sunData.status}</span>
+    <span class="sun-item"><span class="sun-label">Day Length</span> <span class="sun-value">{formatDayLength(sunData.dayLength)}</span></span>
+    <span class="sun-item"><span class="sun-label">Solar Noon</span> <span class="sun-value">{formatTime(sunData.solarNoon)} {timeLabel}</span></span>
+    <span class="sun-item"><span class="sun-label">Status</span> <span class="sun-value sun-status">{sunData.status}</span></span>
   </div>
 </div>
 
@@ -106,35 +82,41 @@
   .sun-info {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.15rem;
   }
 
   .sun-header {
-    font-size: 0.95rem;
     color: var(--color-text-muted);
     letter-spacing: 0.04em;
+    white-space: nowrap;
+    font-size: 0.85rem;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
-  .sun-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.15rem 0.5rem;
-    font-size: 0.8rem;
+  .sun-data {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    font-size: 0.93rem;
+  }
+
+  .sun-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
   }
 
   .sun-label {
     color: var(--color-text-muted);
-    white-space: nowrap;
   }
 
   .sun-value {
     color: var(--color-text);
     font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    font-size: 0.8;
-    white-space: nowrap;
+    font-size: 0.93rem;
   }
 
   .sun-status {
