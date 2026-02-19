@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { Texture } from 'three';
   import Globe from './lib/components/Globe.svelte';
   import Projection from './lib/components/Projection.svelte';
   import Orrery from './lib/components/Orrery.svelte';
+  import Sundial from './lib/components/Sundial.svelte';
   import SettingsPanel from './lib/components/SettingsPanel.svelte';
   import SunInfo from './lib/components/SunInfo.svelte';
   import { loadEarthTexture, loadNightTexture } from './lib/three/scene.js';
   import { tick, playbackMode, isPlaying, playbackSpeed } from './lib/stores/time.js';
-  import { showGlobe, showProjection, showOrrery, showSunInfo, showSettingsPanel } from './lib/stores/settings.js';
+  import { showGlobe, showProjection, showOrrery, showSundial, showSunInfo, showSettingsPanel } from './lib/stores/settings.js';
 
   let sharedTexture: Texture | null = $state(null);
   let nightTexture: Texture | null = $state(null);
@@ -22,70 +23,84 @@
   let globeVisible = $state(true);
   let projVisible = $state(true);
   let orreryVisible = $state(false);
+  let sundialVisible = $state(false);
   showGlobe.subscribe((v) => (globeVisible = v));
   showProjection.subscribe((v) => (projVisible = v));
   showOrrery.subscribe((v) => (orreryVisible = v));
+  showSundial.subscribe((v) => (sundialVisible = v));
   showSunInfo.subscribe((v) => (sunInfoVisible = v));
   showSettingsPanel.subscribe((v) => (panelVisible = v));
 
-  // Collect active views as an ordered list for layout
+  // Canonical order of views (used to determine which are active)
   let activeViews = $derived(
-    (['globe', 'projection', 'orrery'] as const).filter(
-      (v) => v === 'globe' ? globeVisible : v === 'projection' ? projVisible : orreryVisible,
+    (['globe', 'projection', 'orrery', 'sundial'] as const).filter(
+      (v) =>
+        v === 'globe' ? globeVisible :
+        v === 'projection' ? projVisible :
+        v === 'orrery' ? orreryVisible :
+        sundialVisible,
     ),
   );
 
-  // Split ratios: flex proportions for each view section.
-  // splitRatios[i] is the flex weight of view i. Sum = 1.
-  // Reset to equal splits when the view count changes.
-  let splitRatios = $state([0.5, 0.5]);
-  let prevViewCount = 2;
+  // Display order — a permutation of activeViews.
+  // Preserved across add/remove; mutated by promotion (3-view).
+  let displayOrder = $state<string[]>([]);
+  let rowSplit = $state(0.5); // proportion of height for the top row/view
+  let colSplit = $state(0.5); // proportion of width for the left column
 
   $effect(() => {
-    const n = activeViews.length;
-    if (n !== prevViewCount) {
-      splitRatios = Array(n).fill(1 / n);
-      prevViewCount = n;
+    const active = activeViews as readonly string[];
+    const current = untrack(() => displayOrder);
+    const kept = current.filter((v) => active.includes(v));
+    const added = active.filter((v) => !kept.includes(v));
+    const next = [...kept, ...added];
+    if (next.length !== current.length) {
+      rowSplit = 0.5;
+      colSplit = 0.5;
     }
+    displayOrder = next;
   });
 
-  // Split handle dragging
-  let viewsColumnEl: HTMLElement = $state(undefined as unknown as HTMLElement);
-  let draggingHandle = $state(-1); // index of the handle being dragged (-1 = none)
+  // Promotion: swap displayOrder[index] with displayOrder[0].
+  // Called only from the promote-frame edge strips (not from the view cell itself),
+  // so no canvas/button filtering is needed.
+  function tryPromote(index: number, e: MouseEvent) {
+    e.stopPropagation();
+    const next = [...displayOrder];
+    [next[0], next[index]] = [next[index], next[0]];
+    displayOrder = next;
+  }
 
-  function onSplitPointerDown(index: number, e: PointerEvent) {
-    draggingHandle = index;
+  // ── Drag handles ──────────────────────────────────────────────────────────
+  let viewAreaEl: HTMLElement = $state(undefined as unknown as HTMLElement);
+  let bottomRowEl: HTMLElement | null = $state(null);
+  let draggingH = $state(false);
+  let draggingV = $state(false);
+
+  function onHPointerDown(e: PointerEvent) {
+    draggingH = true;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
-
-  function onSplitPointerMove(e: PointerEvent) {
-    if (draggingHandle < 0 || !viewsColumnEl) return;
-    const rect = viewsColumnEl.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const ratio = y / rect.height;
-
-    // Compute where the handle should split: handle i sits between view i and i+1.
-    // Sum of ratios for views 0..i = ratio, and views i+1..n = 1 - ratio.
-    const n = splitRatios.length;
-    const minFlex = 0.15; // minimum proportion per view
-
-    // Sum of ratios before the handle
-    let before = Math.max(minFlex * (draggingHandle + 1), Math.min(1 - minFlex * (n - draggingHandle - 1), ratio));
-    // Distribute evenly among views before and after the handle
-    const newRatios = [...splitRatios];
-    const beforeCount = draggingHandle + 1;
-    const afterCount = n - beforeCount;
-    const perBefore = before / beforeCount;
-    const perAfter = (1 - before) / afterCount;
-
-    for (let i = 0; i < beforeCount; i++) newRatios[i] = perBefore;
-    for (let i = beforeCount; i < n; i++) newRatios[i] = perAfter;
-    splitRatios = newRatios;
+  function onHPointerMove(e: PointerEvent) {
+    if (!draggingH || !viewAreaEl) return;
+    const rect = viewAreaEl.getBoundingClientRect();
+    rowSplit = Math.max(0.15, Math.min(0.85, (e.clientY - rect.top) / rect.height));
   }
+  function onHPointerUp() { draggingH = false; }
 
-  function onSplitPointerUp() {
-    draggingHandle = -1;
+  function onVPointerDown(e: PointerEvent) {
+    draggingV = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
+  function onVPointerMove(e: PointerEvent) {
+    if (!draggingV) return;
+    // bottomRowEl in 3-view; viewAreaEl in 4-view (same width either way)
+    const refEl = bottomRowEl ?? viewAreaEl;
+    if (!refEl) return;
+    const rect = refEl.getBoundingClientRect();
+    colSplit = Math.max(0.15, Math.min(0.85, (e.clientX - rect.left) / rect.width));
+  }
+  function onVPointerUp() { draggingV = false; }
 
   function hasWebGL(): boolean {
     try {
@@ -94,9 +109,7 @@
     } catch { return false; }
   }
 
-  // Time-advancement loop. Each view component drives its own rAF render
-  // loop internally (started in its onMount), so the parent only handles
-  // time progression — no cross-component $state refs needed.
+  // Time-advancement loop. Each view component drives its own rAF render loop.
   function advanceTime(now: number) {
     animationId = requestAnimationFrame(advanceTime);
     const deltaSec = Math.min((now - lastFrameTime) / 1000, 0.1);
@@ -120,9 +133,6 @@
       lastFrameTime = performance.now();
       animationId = requestAnimationFrame(advanceTime);
 
-      // Brute-force kick: switch from realtime to smooth mode after a
-      // short delay so the Three.js views start animating immediately.
-      // Mirrors the manual "pause → play" workaround.
       setTimeout(() => {
         playbackMode.set('smooth');
         playbackSpeed.set(1);
@@ -141,47 +151,159 @@
   });
 </script>
 
+{#snippet promoteFrame(index: number)}
+  <!--
+    Thin clickable frame around the small view. Each strip covers one edge;
+    the center is left uncovered so canvas interactions pass through normally.
+    z-index keeps the strips above the Three.js canvas.
+  -->
+  <div class="promote-frame" aria-hidden="true">
+    <button class="pf-edge pf-top"    onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
+    <button class="pf-edge pf-bottom" onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
+    <button class="pf-edge pf-left"   onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
+    <button class="pf-edge pf-right"  onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
+  </div>
+{/snippet}
+
+{#snippet cellContent(view: string)}
+  {#if view === 'globe'}
+    <Globe bind:this={globeRef} sharedTexture={sharedTexture!} nightTexture={nightTexture!} />
+    <button
+      class="reset-view-btn"
+      onclick={() => globeRef?.resetView()}
+      aria-label="Reset globe view to saved location"
+      title="Reset view"
+    >&#8962;</button>
+  {:else if view === 'projection'}
+    <Projection sharedTexture={sharedTexture!} nightTexture={nightTexture!} />
+  {:else if view === 'orrery'}
+    <Orrery sharedTexture={sharedTexture!} nightTexture={nightTexture!} />
+  {:else if view === 'sundial'}
+    <Sundial />
+  {/if}
+{/snippet}
+
 {#if errorMessage}
   <div class="error-screen" role="alert">
     <p>{errorMessage}</p>
   </div>
 {:else}
 <div class="app-layout">
-  <main class="views-column" bind:this={viewsColumnEl}>
+  <main class="views-column">
     {#if sunInfoVisible}
       <div class="sun-info-bar">
         <SunInfo />
       </div>
     {/if}
     {#if sharedTexture && nightTexture}
-      {#each activeViews as view, i (view)}
-        {#if i > 0}
+      <div class="view-area" bind:this={viewAreaEl}>
+
+        {#if displayOrder.length === 1}
+          <!-- ── 1 view: full area ── -->
+          <section class="view-cell">
+            {@render cellContent(displayOrder[0])}
+          </section>
+
+        {:else if displayOrder.length === 2}
+          <!-- ── 2 views: vertical stack ── -->
+          <section class="view-cell" style="flex: {rowSplit}">
+            {@render cellContent(displayOrder[0])}
+          </section>
           <div
-            class="split-handle"
+            class="split-handle split-handle--h"
             role="separator"
             aria-label="Resize views"
-            onpointerdown={(e) => onSplitPointerDown(i - 1, e)}
-            onpointermove={onSplitPointerMove}
-            onpointerup={onSplitPointerUp}
-            onpointercancel={onSplitPointerUp}
+            onpointerdown={onHPointerDown}
+            onpointermove={onHPointerMove}
+            onpointerup={onHPointerUp}
+            onpointercancel={onHPointerUp}
           ></div>
+          <section class="view-cell" style="flex: {1 - rowSplit}">
+            {@render cellContent(displayOrder[1])}
+          </section>
+
+        {:else if displayOrder.length === 3}
+          <!-- ── 3 views: 1 large top + 2 small below ── -->
+          <section class="view-cell" style="flex: {rowSplit}">
+            {@render cellContent(displayOrder[0])}
+          </section>
+          <div
+            class="split-handle split-handle--h"
+            role="separator"
+            aria-label="Resize views"
+            onpointerdown={onHPointerDown}
+            onpointermove={onHPointerMove}
+            onpointerup={onHPointerUp}
+            onpointercancel={onHPointerUp}
+          ></div>
+          <div class="view-row" style="flex: {1 - rowSplit}" bind:this={bottomRowEl}>
+            <div class="view-cell view-cell--small" style="flex: {colSplit}">
+              {@render promoteFrame(1)}
+              {@render cellContent(displayOrder[1])}
+            </div>
+            <div
+              class="split-handle split-handle--v"
+              role="separator"
+              aria-label="Resize views"
+              onpointerdown={onVPointerDown}
+              onpointermove={onVPointerMove}
+              onpointerup={onVPointerUp}
+              onpointercancel={onVPointerUp}
+            ></div>
+            <div class="view-cell view-cell--small" style="flex: {1 - colSplit}">
+              {@render promoteFrame(2)}
+              {@render cellContent(displayOrder[2])}
+            </div>
+          </div>
+
+        {:else if displayOrder.length === 4}
+          <!-- ── 4 views: 2×2 grid ── -->
+          <div class="view-row" style="flex: {rowSplit}">
+            <section class="view-cell" style="flex: {colSplit}">
+              {@render cellContent(displayOrder[0])}
+            </section>
+            <div
+              class="split-handle split-handle--v"
+              role="separator"
+              aria-label="Resize views"
+              onpointerdown={onVPointerDown}
+              onpointermove={onVPointerMove}
+              onpointerup={onVPointerUp}
+              onpointercancel={onVPointerUp}
+            ></div>
+            <section class="view-cell" style="flex: {1 - colSplit}">
+              {@render cellContent(displayOrder[1])}
+            </section>
+          </div>
+          <div
+            class="split-handle split-handle--h"
+            role="separator"
+            aria-label="Resize views"
+            onpointerdown={onHPointerDown}
+            onpointermove={onHPointerMove}
+            onpointerup={onHPointerUp}
+            onpointercancel={onHPointerUp}
+          ></div>
+          <div class="view-row" style="flex: {1 - rowSplit}">
+            <section class="view-cell" style="flex: {colSplit}">
+              {@render cellContent(displayOrder[2])}
+            </section>
+            <div
+              class="split-handle split-handle--v"
+              role="separator"
+              aria-label="Resize views"
+              onpointerdown={onVPointerDown}
+              onpointermove={onVPointerMove}
+              onpointerup={onVPointerUp}
+              onpointercancel={onVPointerUp}
+            ></div>
+            <section class="view-cell" style="flex: {1 - colSplit}">
+              {@render cellContent(displayOrder[3])}
+            </section>
+          </div>
         {/if}
-        <section class="view-cell" style="flex: {splitRatios[i] ?? 1}">
-          {#if view === 'globe'}
-            <Globe bind:this={globeRef} {sharedTexture} {nightTexture} />
-            <button
-              class="reset-view-btn"
-              onclick={() => globeRef?.resetView()}
-              aria-label="Reset globe view to saved location"
-              title="Reset view"
-            >&#8962;</button>
-          {:else if view === 'projection'}
-            <Projection {sharedTexture} {nightTexture} />
-          {:else if view === 'orrery'}
-            <Orrery {sharedTexture} {nightTexture} />
-          {/if}
-        </section>
-      {/each}
+
+      </div>
     {/if}
   </main>
   <button
@@ -226,6 +348,22 @@
     min-height: 0;
   }
 
+  .view-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .view-row {
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .view-cell {
     flex: 1;
     display: flex;
@@ -235,13 +373,56 @@
     overflow: hidden;
   }
 
+  /* Promotable small views (3-view layout) */
+  .view-cell--small {
+    cursor: default;
+  }
+
+  /* Promotion frame: four thin edge strips that sit above the canvas.
+     The center gap is intentionally uncovered so canvas interactions pass through. */
+  .promote-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none; /* the frame itself is transparent to clicks */
+  }
+
+  .pf-edge {
+    position: absolute;
+    background: transparent;
+    border: none;
+    padding: 0;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .pf-edge:hover {
+    background: var(--color-accent);
+    opacity: 0.25;
+  }
+
+  .pf-top    { top: 0;    left: 0;    right: 0;   height: 10px; }
+  .pf-bottom { bottom: 0; left: 0;    right: 0;   height: 10px; }
+  .pf-left   { top: 10px; bottom: 10px; left: 0;  width: 10px;  }
+  .pf-right  { top: 10px; bottom: 10px; right: 0; width: 10px;  }
+
+  /* Split handles */
   .split-handle {
     flex-shrink: 0;
-    height: 6px;
     background: var(--color-border);
-    cursor: row-resize;
     position: relative;
     touch-action: none;
+  }
+
+  .split-handle--h {
+    height: 6px;
+    cursor: row-resize;
+  }
+
+  .split-handle--v {
+    width: 6px;
+    cursor: col-resize;
   }
 
   .split-handle::after {
@@ -250,11 +431,19 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 2rem;
-    height: 3px;
     border-radius: 2px;
     background: var(--color-text-muted);
     opacity: 0.5;
+  }
+
+  .split-handle--h::after {
+    width: 2rem;
+    height: 3px;
+  }
+
+  .split-handle--v::after {
+    width: 3px;
+    height: 2rem;
   }
 
   .split-handle:hover,

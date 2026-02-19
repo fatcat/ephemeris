@@ -12,6 +12,7 @@
     showGlobe,
     showProjection,
     showOrrery,
+    showSundial,
     cameraLatitude,
     userLocation,
     type UserLocation,
@@ -21,6 +22,7 @@
   let globeOn = $state(true);
   let projOn = $state(true);
   let orreryOn = $state(false);
+  let sundialOn = $state(false);
   let camLat = $state(0);
   let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
   let gearOpen = $state(false);
@@ -32,6 +34,7 @@
   showGlobe.subscribe((v) => (globeOn = v));
   showProjection.subscribe((v) => (projOn = v));
   showOrrery.subscribe((v) => (orreryOn = v));
+  showSundial.subscribe((v) => (sundialOn = v));
   cameraLatitude.subscribe((v) => (camLat = v));
   userLocation.subscribe((v) => (loc = v));
 
@@ -40,7 +43,7 @@
     const current = get(store);
     if (current) {
       // Don't allow turning off if it's the only one on
-      const activeCount = (+get(showGlobe)) + (+get(showProjection)) + (+get(showOrrery));
+      const activeCount = (+get(showGlobe)) + (+get(showProjection)) + (+get(showOrrery)) + (+get(showSundial));
       if (activeCount <= 1) return;
     }
     store.set(!current);
@@ -132,6 +135,15 @@
           aria-pressed={orreryOn}
         >
           Orrery
+        </button>
+        <button
+          class="btn btn-vt"
+          class:active={sundialOn}
+          onclick={() => toggleView(showSundial)}
+          aria-label="Toggle sundial view"
+          aria-pressed={sundialOn}
+        >
+          Dial
         </button>
       </div>
     </div>

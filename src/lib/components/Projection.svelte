@@ -138,15 +138,14 @@
     pointerDownPos = null;
     if (dx * dx + dy * dy >= CLICK_THRESHOLD_SQ) return;
 
-    const rect = container.getBoundingClientRect();
-    const cr = projScene.canvasRect;
-    const xRel = e.clientX - rect.left - cr.left;
-    const yRel = e.clientY - rect.top - cr.top;
+    const canvasBR = projScene.renderer.domElement.getBoundingClientRect();
+    const xRel = e.clientX - canvasBR.left;
+    const yRel = e.clientY - canvasBR.top;
 
-    if (xRel < 0 || xRel > cr.width || yRel < 0 || yRel > cr.height) return;
+    if (xRel < 0 || xRel > canvasBR.width || yRel < 0 || yRel > canvasBR.height) return;
 
-    const lon = (xRel / cr.width - 0.5) * 360;
-    const lat = (0.5 - yRel / cr.height) * 180;
+    const lon = (xRel / canvasBR.width - 0.5) * 360;
+    const lat = (0.5 - yRel / canvasBR.height) * 180;
 
     userLocation.set({
       name: '',

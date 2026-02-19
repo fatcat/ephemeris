@@ -246,8 +246,8 @@
     bottom: 0.5rem;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1rem;
-    font-style: italic;
+    font-size: 1.5rem;
+    font-style: bold;
     color: rgba(230, 230, 240, 0.7);
     pointer-events: none;
     z-index: 1;

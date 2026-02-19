@@ -35,8 +35,8 @@
     <h2 class="about-name">Ephemeris</h2>
     <p class="about-desc">
       An educational web app for understanding why Earth has seasons. Visualizes
-      the day/night terminator on a 3D globe and equirectangular projection,
-      driven by real solar position calculations.
+      the day/night terminator on a 3D globe and equirectangular projection. Also
+      shows an orrery view and sundial. Driven by real solar position calculations.
     </p>
     <p class="about-desc">
       Designed for instructor-led use with students ages 8+.
@@ -44,7 +44,7 @@
 
     <div class="about-links">
       <a
-        href="https://github.com/fatcat/ephemeris/tree/master"
+        href="https://github.com/fatcat/ephemeris"
         target="_blank"
         rel="noopener noreferrer"
       >GitHub Repository</a>
@@ -100,7 +100,7 @@
   }
 
   .about-desc {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--color-text-muted);
     line-height: 1.4;
     margin: 0;

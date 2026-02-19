@@ -38,6 +38,7 @@ interface Settings {
   showGlobe: boolean;
   showProjection: boolean;
   showOrrery: boolean;
+  showSundial: boolean;
   showSettingsPanel: boolean;
   location: UserLocation;
   recentLocations: UserLocation[];
@@ -46,7 +47,7 @@ interface Settings {
 const defaults: Settings = {
   themeId: 'charcoal',
   axialTilt: REAL_AXIAL_TILT,
-  hardTerminator: false,
+  hardTerminator: true,
   showMinorGrid: false,
   showMajorGrid: true,
   showEquatorTropics: false,
@@ -62,6 +63,7 @@ const defaults: Settings = {
   showGlobe: true,
   showProjection: true,
   showOrrery: false,
+  showSundial: false,
   showSettingsPanel: true,
   location: { name: '', lat: 0, lon: 0 },
   recentLocations: [],
@@ -120,6 +122,7 @@ export const useLocalTime = writable<boolean>(initial.useLocalTime);
 export const showGlobe = writable<boolean>(initial.showGlobe);
 export const showProjection = writable<boolean>(initial.showProjection);
 export const showOrrery = writable<boolean>(initial.showOrrery);
+export const showSundial = writable<boolean>(initial.showSundial);
 export const showSettingsPanel = writable<boolean>(initial.showSettingsPanel);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
@@ -227,6 +230,12 @@ showProjection.subscribe((v) => {
 showOrrery.subscribe((v) => {
   const s = loadSettings();
   s.showOrrery = v;
+  saveSettings(s);
+});
+
+showSundial.subscribe((v) => {
+  const s = loadSettings();
+  s.showSundial = v;
   saveSettings(s);
 });
 

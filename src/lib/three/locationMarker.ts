@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { geoToGlobePosition, geoToProjectionPosition } from '../utils/geo.js';
 
-const TEX_SIZE = 32;
+const TEX_SIZE = 38;
 const HALF = TEX_SIZE / 2;
 
 function createLocationTexture(): CanvasTexture {
@@ -27,7 +27,7 @@ function createLocationTexture(): CanvasTexture {
   // Simple solid red dot
   ctx.beginPath();
   ctx.arc(HALF, HALF, 5, 0, Math.PI * 2);
-  ctx.fillStyle = '#DC3232';
+  ctx.fillStyle = '#dc0202';
   ctx.fill();
 
   return new CanvasTexture(canvas);
