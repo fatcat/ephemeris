@@ -81,11 +81,15 @@
   function selectSpeed(s: number) {
     speed = s;
     playbackSpeed.set(reverse ? -s : s);
+    playbackMode.set('smooth');
+    isPlaying.set(true);
   }
 
   function selectInterval(d: number) {
     interval = d;
     snapInterval.set(reverse ? -d : d);
+    playbackMode.set('snap');
+    isPlaying.set(true);
   }
 
   /** Whether the play/pause button should show pause */

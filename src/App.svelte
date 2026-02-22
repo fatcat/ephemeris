@@ -62,8 +62,6 @@
   });
 
   // Promotion: swap displayOrder[index] with displayOrder[0].
-  // Called only from the promote-frame edge strips (not from the view cell itself),
-  // so no canvas/button filtering is needed.
   function tryPromote(index: number, e: MouseEvent) {
     e.stopPropagation();
     const next = [...displayOrder];
@@ -151,18 +149,13 @@
   });
 </script>
 
-{#snippet promoteFrame(index: number)}
-  <!--
-    Thin clickable frame around the small view. Each strip covers one edge;
-    the center is left uncovered so canvas interactions pass through normally.
-    z-index keeps the strips above the Three.js canvas.
-  -->
-  <div class="promote-frame" aria-hidden="true">
-    <button class="pf-edge pf-top"    onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
-    <button class="pf-edge pf-bottom" onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
-    <button class="pf-edge pf-left"   onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
-    <button class="pf-edge pf-right"  onclick={(e) => tryPromote(index, e)} tabindex="-1" aria-label="Promote view"></button>
-  </div>
+{#snippet promoteButton(index: number)}
+  <button
+    class="promote-btn"
+    onclick={(e) => tryPromote(index, e)}
+    aria-label="Promote to main view"
+    title="Promote to main view"
+  >&#8679;</button>
 {/snippet}
 
 {#snippet cellContent(view: string)}
@@ -238,7 +231,7 @@
           ></div>
           <div class="view-row" style="flex: {1 - rowSplit}" bind:this={bottomRowEl}>
             <div class="view-cell view-cell--small" style="flex: {colSplit}">
-              {@render promoteFrame(1)}
+              {@render promoteButton(1)}
               {@render cellContent(displayOrder[1])}
             </div>
             <div
@@ -251,7 +244,7 @@
               onpointercancel={onVPointerUp}
             ></div>
             <div class="view-cell view-cell--small" style="flex: {1 - colSplit}">
-              {@render promoteFrame(2)}
+              {@render promoteButton(2)}
               {@render cellContent(displayOrder[2])}
             </div>
           </div>
@@ -373,39 +366,37 @@
     overflow: hidden;
   }
 
-  /* Promotable small views (3-view layout) */
-  .view-cell--small {
-    cursor: default;
-  }
-
-  /* Promotion frame: four thin edge strips that sit above the canvas.
-     The center gap is intentionally uncovered so canvas interactions pass through. */
-  .promote-frame {
+  /* Promote button: top-right corner of each small view (3-view layout) */
+  .promote-btn {
     position: absolute;
-    inset: 0;
-    z-index: 100;
-    pointer-events: none; /* the frame itself is transparent to clicks */
-  }
-
-  .pf-edge {
-    position: absolute;
-    background: transparent;
-    border: none;
-    padding: 0;
-    pointer-events: auto;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 101;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-overlay-bg);
+    color: var(--color-text-muted);
+    font-size: 1.4rem;
+    line-height: 1;
     cursor: pointer;
-    transition: background-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
-  .pf-edge:hover {
-    background: var(--color-accent);
-    opacity: 0.25;
+  .promote-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
-  .pf-top    { top: 0;    left: 0;    right: 0;   height: 10px; }
-  .pf-bottom { bottom: 0; left: 0;    right: 0;   height: 10px; }
-  .pf-left   { top: 10px; bottom: 10px; left: 0;  width: 10px;  }
-  .pf-right  { top: 10px; bottom: 10px; right: 0; width: 10px;  }
+  .promote-btn:active {
+    opacity: 0.7;
+  }
 
   /* Split handles */
   .split-handle {

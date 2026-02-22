@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { get } from 'svelte/store';
   import { currentTime, setTime } from '../stores/time.js';
   import { useLocalTime, userTimezone } from '../stores/settings.js';
   import { getUtcOffsetMs } from '../utils/timezone.js';
@@ -28,11 +29,18 @@
 
   currentTime.subscribe((t) => {
     const d = displayDate(t);
-    selectedYear = d.getUTCFullYear();
-    selectedMonth = d.getUTCMonth();
-    selectedDay = d.getUTCDate();
-    viewYear = selectedYear;
-    viewMonth = selectedMonth;
+    const newYear = d.getUTCFullYear();
+    const newMonth = d.getUTCMonth();
+    const newDay = d.getUTCDate();
+    // Only pull the view to follow when the current month actually changes,
+    // so manual prev/next navigation isn't overwritten every frame.
+    if (newYear !== selectedYear || newMonth !== selectedMonth) {
+      viewYear = newYear;
+      viewMonth = newMonth;
+    }
+    selectedYear = newYear;
+    selectedMonth = newMonth;
+    selectedDay = newDay;
   });
 
   function daysInMonth(year: number, month: number): number {
@@ -62,11 +70,21 @@
   }
 
   function selectDay(day: number) {
-    // Keep the current time-of-day, change only the date
-    const cur = new Date(selectedYear, selectedMonth, selectedDay);
-    const hours = cur.getUTCHours?.() ?? 12;
-    const mins = cur.getUTCMinutes?.() ?? 0;
-    setTime(new Date(Date.UTC(viewYear, viewMonth, day, hours, mins, 0)));
+    const cur = get(currentTime);
+    if (!localTime) {
+      // UTC mode: keep the same UTC hours:mins:secs, change only the date
+      setTime(new Date(Date.UTC(viewYear, viewMonth, day, cur.getUTCHours(), cur.getUTCMinutes(), cur.getUTCSeconds())));
+      return;
+    }
+    // Local time mode: keep the same local hours:mins:secs
+    const display = displayDate(cur);
+    const h = display.getUTCHours();
+    const m = display.getUTCMinutes();
+    const s = display.getUTCSeconds();
+    // Build the new local-time moment then subtract the offset to get UTC
+    const approxMs = Date.UTC(viewYear, viewMonth, day, h, m, s);
+    const offset = getUtcOffsetMs(new Date(approxMs), tz);
+    setTime(new Date(approxMs - offset));
   }
 
   function prevMonth() {

@@ -19,11 +19,13 @@ import {
   BufferGeometry,
   Line,
   LineBasicMaterial,
+  Vector2,
   Vector3,
   MeshBasicMaterial,
   PlaneGeometry,
   CanvasTexture,
   DoubleSide,
+  LatheGeometry,
   PCFSoftShadowMap,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -33,9 +35,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const DIAL_RADIUS = 12
 const DIAL_HEIGHT = 1.50;
 const GNOMON_BASE_LENGTH = DIAL_RADIUS * 0.75;
-const HOUR_LINE_INNER = 8.6; // start offset from center
-const HOUR_LINE_OUTER = DIAL_RADIUS * 0.80; // stops just short of labels
-const LABEL_RADIUS = DIAL_RADIUS * 0.9;
+const HOUR_LINE_INNER = 7.6; // start offset from center
+const HOUR_LINE_OUTER = DIAL_RADIUS * 0.75; // stops just short of labels
+const LABEL_RADIUS = DIAL_RADIUS * 0.85;
+const BEVEL = 0.28;         // chamfer width on top edge of dial
+const INNER_RING_R = 6.5;   // decorative ring inside hour lines (around boss)
+const OUTER_RING_R = 11.40; // decorative ring between labels and rim
 
 //const ROMAN = [
 //  '', 'I', 'II', 'III', 'IV', 'V', 'VI',
@@ -47,10 +52,64 @@ const ROMAN = [
   'VII', 'VIII', 'IX', 'X', '', 'XII',
 ];
 
-const DIAL_COLOR = 0xe8e2d4; // pale warm stone
 const GNOMON_COLOR = 0x6b5b45; // dark bronze
 const LINE_COLOR = 0x3a3226; // dark marking
 const LABEL_COLOR = '#000000';
+
+/**
+ * Generate a procedural stone-grain canvas texture for the dial face.
+ * Uses a deterministic xorshift RNG so the result is reproducible.
+ */
+function createDialTexture(): CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  // Base warm cream/limestone colour
+  ctx.fillStyle = '#e8e2d4';
+  ctx.fillRect(0, 0, size, size);
+
+  // Deterministic xorshift32 RNG
+  let seed = 0x6D2B79F5;
+  function rng(): number {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    return (seed >>> 0) / 0xFFFFFFFF;
+  }
+
+  // Fine grain: thousands of tiny dots in light/dark warm tones
+  for (let i = 0; i < 14000; i++) {
+    const x = rng() * size;
+    const y = rng() * size;
+    const r = rng() * 1.1 + 0.2;
+    ctx.globalAlpha = rng() * 0.065 + 0.01;
+    ctx.fillStyle = rng() > 0.5 ? '#fff5dc' : '#5a3f1a';
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Subtle veins / fossil-like scratches
+  for (let i = 0; i < 40; i++) {
+    const x1 = rng() * size;
+    const y1 = rng() * size;
+    const angle = rng() * Math.PI * 2;
+    const len = rng() * 80 + 15;
+    ctx.globalAlpha = rng() * 0.045 + 0.01;
+    ctx.strokeStyle = rng() > 0.45 ? '#d4c9a8' : '#7a6038';
+    ctx.lineWidth = rng() * 0.8 + 0.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    const cpx = x1 + Math.cos(angle) * len * 0.5 + (rng() - 0.5) * 30;
+    const cpy = y1 + Math.sin(angle) * len * 0.5 + (rng() - 0.5) * 30;
+    ctx.quadraticCurveTo(cpx, cpy, x1 + Math.cos(angle) * len, y1 + Math.sin(angle) * len);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+  return new CanvasTexture(canvas);
+}
 
 export interface SundialScene {
   scene: Scene;
@@ -146,16 +205,25 @@ export function createSundialScene(container: HTMLElement): SundialScene {
   const ambientLight = new AmbientLight(0x404060, 0.3);
   scene.add(ambientLight);
 
-  // ── Dial face ──
-  const dialGeo = new CylinderGeometry(DIAL_RADIUS, DIAL_RADIUS, DIAL_HEIGHT, 64);
+  // ── Dial face (LatheGeometry with chamfered top edge) ──
+  // Profile swept around Y axis: bottom-centre → outer bottom →
+  // outer side → chamfer → top-centre. Top face sits at y=0.
+  const dialProfile: Vector2[] = [
+    new Vector2(0,                   -DIAL_HEIGHT),
+    new Vector2(DIAL_RADIUS,         -DIAL_HEIGHT),
+    new Vector2(DIAL_RADIUS,         -BEVEL),
+    new Vector2(DIAL_RADIUS - BEVEL,  0),
+    new Vector2(0,                    0),
+  ];
+  const dialGeo = new LatheGeometry(dialProfile, 64);
+  const dialTexture = createDialTexture();
   const dialMat = new MeshStandardMaterial({
-    color: DIAL_COLOR,
-    roughness: 0.8,
-    metalness: 0.05,
+    map: dialTexture,
+    roughness: 0.85,
+    metalness: 0.02,
   });
   const dialMesh = new Mesh(dialGeo, dialMat);
   dialMesh.receiveShadow = true;
-  dialMesh.position.y = -DIAL_HEIGHT / 2;
   scene.add(dialMesh);
 
   // ── Dynamic group for gnomon + hour lines + labels ──
@@ -215,6 +283,22 @@ export function createSundialScene(container: HTMLElement): SundialScene {
       dynamicMaterials.push(gnomonMat);
     }
 
+    // ── Center boss (brass ring around gnomon base) ──
+    const bossGeo = new CylinderGeometry(0.9, 1.25, 0.3, 32);
+    const bossMat = new MeshStandardMaterial({
+      color: 0xc8a038,
+      roughness: 0.22,
+      metalness: 0.88,
+    });
+    const bossMesh = new Mesh(bossGeo, bossMat);
+    bossMesh.castShadow = true;
+    bossMesh.receiveShadow = true;
+    bossMesh.position.y = 0.15; // base at y=0 (dial top), top at y=0.3
+    dialGroup.add(bossMesh);
+    dynamicMeshes.push(bossMesh);
+    dynamicGeometries.push(bossGeo);
+    dynamicMaterials.push(bossMat);
+
     // ── Hour lines ──
     const lineMat = new LineBasicMaterial({ color: LINE_COLOR });
     dynamicMaterials.push(lineMat);
@@ -272,26 +356,28 @@ export function createSundialScene(container: HTMLElement): SundialScene {
         0.02,
         -Math.cos(angle) * LABEL_RADIUS,
       );
+      // When the group is flipped (scale.z=-1 for southern hemisphere), the plane's
+      // back face is rendered, making the texture appear horizontally mirrored.
+      // A second mirror in local X restores readability.
+      if (southernHemi) labelMesh.scale.x = -1;
       dialGroup.add(labelMesh);
       dynamicMeshes.push(labelMesh);
     }
 
-    // ── Rim circle ──
-    const rimPts: Vector3[] = [];
-    const rimSegs = 64;
-    for (let i = 0; i <= rimSegs; i++) {
-      const a = (i / rimSegs) * Math.PI * 2;
-      rimPts.push(new Vector3(
-        Math.cos(a) * DIAL_RADIUS,
-        0.01,
-        Math.sin(a) * DIAL_RADIUS,
-      ));
+    // ── Decorative concentric rings ──
+    // Inner ring frames the boss area; outer ring frames the label zone.
+    for (const ringR of [INNER_RING_R, OUTER_RING_R]) {
+      const pts: Vector3[] = [];
+      for (let i = 0; i <= 72; i++) {
+        const a = (i / 72) * Math.PI * 2;
+        pts.push(new Vector3(Math.cos(a) * ringR, 0.01, Math.sin(a) * ringR));
+      }
+      const ringGeo = new BufferGeometry().setFromPoints(pts);
+      const ringLine = new Line(ringGeo, lineMat);
+      dialGroup.add(ringLine);
+      dynamicMeshes.push(ringLine);
+      dynamicGeometries.push(ringGeo);
     }
-    const rimGeo = new BufferGeometry().setFromPoints(rimPts);
-    const rimLine = new Line(rimGeo, lineMat);
-    dialGroup.add(rimLine);
-    dynamicMeshes.push(rimLine);
-    dynamicGeometries.push(rimGeo);
 
     // Southern hemisphere: flip the dial group so gnomon points south
     if (southernHemi) {
@@ -373,6 +459,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
     clearDynamic();
     dialGeo.dispose();
     dialMat.dispose();
+    dialTexture.dispose();
     controls.dispose();
     renderer.dispose();
     renderer.domElement.remove();

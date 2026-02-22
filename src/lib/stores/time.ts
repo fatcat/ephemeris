@@ -164,6 +164,7 @@ export function setTime(date: Date): void {
 /** Reset to real-time mode synced to system clock */
 export function resetToRealtime(): void {
   playbackMode.set('realtime');
+  playbackSpeed.set(1);
   isPlaying.set(true);
   currentTime.set(new Date());
 }
