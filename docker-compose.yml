@@ -6,4 +6,5 @@ services:
       - "443:8443"
     volumes:
       - ./certs:/certs:ro
+      - /var/log/ephemeris:/var/log/nginx
     restart: unless-stopped
