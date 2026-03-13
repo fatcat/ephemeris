@@ -16,10 +16,8 @@
   let selectedMonth: number = $state(new Date().getUTCMonth());
   let selectedDay: number = $state(new Date().getUTCDate());
 
-  let localTime = $state(false);
-  let tz = $state('Etc/UTC');
-  useLocalTime.subscribe((v) => (localTime = v));
-  userTimezone.subscribe((v) => (tz = v));
+  let localTime = $derived($useLocalTime);
+  let tz = $derived($userTimezone);
 
   /** Return the display date, adjusted for timezone when local time is enabled. */
   function displayDate(t: Date): Date {
@@ -27,8 +25,8 @@
     return new Date(t.getTime() + getUtcOffsetMs(t, tz));
   }
 
-  currentTime.subscribe((t) => {
-    const d = displayDate(t);
+  $effect(() => {
+    const d = displayDate($currentTime);
     const newYear = d.getUTCFullYear();
     const newMonth = d.getUTCMonth();
     const newDay = d.getUTCDate();

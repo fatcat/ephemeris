@@ -54,7 +54,7 @@
     const kept = current.filter((v) => active.includes(v));
     const added = active.filter((v) => !kept.includes(v));
     const next = [...kept, ...added];
-    if (next.length !== current.length) {
+    if (next.length !== current.length || next.some((v, i) => v !== current[i])) {
       rowSplit = 0.5;
       colSplit = 0.5;
     }

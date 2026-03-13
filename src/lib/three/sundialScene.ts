@@ -430,7 +430,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
     // than toggling visibility. t=0 at horizon (faint shadow), t=1 at 60° (crisp).
     const t = Math.max(0, Math.min(1, elevationDeg / 60));
     sunLight.intensity = 0.3 + t * 1.9;      // 0.3 (low) → 2.2 (high sun)
-    ambientLight.intensity = 5.8 - t * 1.6;  // 1.8 (low) → 0.2 (high sun)
+    ambientLight.intensity = 1.8 - t * 1.6;  // 1.8 (low) → 0.2 (high sun)
     ambientLight.color.setHex(0x404060);
 
     const elRad = elevationDeg * (Math.PI / 180);

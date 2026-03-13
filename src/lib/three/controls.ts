@@ -122,6 +122,20 @@ export function createGlobeControls(
   let latFrom: number | null = null;
 
   function update() {
+    // Handle camera latitude animation (always, even during reset)
+    if (latTarget !== null && latStart !== null && latFrom !== null) {
+      const elapsed = (performance.now() - latStart) / 1000;
+      const t = Math.min(1, elapsed / RESET_DURATION);
+      const eased = 1 - Math.pow(1 - t, 3);
+      camLatRad = latFrom + (latTarget - latFrom) * eased;
+      applyCameraPosition(camera.position.length());
+      if (t >= 1) {
+        latTarget = null;
+        latStart = null;
+        latFrom = null;
+      }
+    }
+
     // Handle reset animation
     if (resetTarget !== null && resetStart !== null && resetFrom !== null) {
       const elapsed = (performance.now() - resetStart) / 1000;
@@ -135,28 +149,11 @@ export function createGlobeControls(
         resetFrom = null;
       }
       velocity = 0;
-      return;
-    }
-
-    if (!isDragging && Math.abs(velocity) > MIN_VELOCITY) {
+    } else if (!isDragging && Math.abs(velocity) > MIN_VELOCITY) {
       spinGroup.rotation.y += velocity;
       velocity *= DAMPING;
     } else if (!isDragging) {
       velocity = 0;
-    }
-
-    // Handle camera latitude animation
-    if (latTarget !== null && latStart !== null && latFrom !== null) {
-      const elapsed = (performance.now() - latStart) / 1000;
-      const t = Math.min(1, elapsed / RESET_DURATION);
-      const eased = 1 - Math.pow(1 - t, 3);
-      camLatRad = latFrom + (latTarget - latFrom) * eased;
-      applyCameraPosition(camera.position.length());
-      if (t >= 1) {
-        latTarget = null;
-        latStart = null;
-        latFrom = null;
-      }
     }
   }
 

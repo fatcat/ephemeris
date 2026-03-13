@@ -24,7 +24,6 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D uDayTexture;
   uniform sampler2D uNightTexture;
   uniform vec3 uSunDirection;
-  uniform vec2 uResolution;
   uniform float uHardTerminator;
   uniform float uShowMajorGrid;
   uniform float uShowMinorGrid;
@@ -139,7 +138,6 @@ export function createProjectionShaderMaterial(
     uDayTexture: { value: dayTexture },
     uNightTexture: { value: nightTexture },
     uSunDirection: { value: new Vector3(0, 0, 1) },
-    uResolution: { value: [1024, 512] },
     uHardTerminator: { value: 0.0 },
     uShowMajorGrid: { value: 1.0 },
     uShowMinorGrid: { value: 1.0 },

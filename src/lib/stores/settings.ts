@@ -100,6 +100,14 @@ function saveSettings(s: Settings): void {
 
 const initial = loadSettings();
 
+/** In-memory settings cache — avoids stale reads from localStorage */
+let cached = { ...initial };
+
+function updateAndSave(updater: (s: Settings) => void): void {
+  updater(cached);
+  saveSettings(cached);
+}
+
 export const currentThemeId = writable<string>(initial.themeId);
 
 // Apply the saved theme immediately so CSS vars are set before first paint
@@ -127,128 +135,37 @@ export const showSettingsPanel = writable<boolean>(initial.showSettingsPanel);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
 
-axialTilt.subscribe((v) => {
-  const s = loadSettings();
-  s.axialTilt = v;
-  saveSettings(s);
-});
-
-hardTerminator.subscribe((v) => {
-  const s = loadSettings();
-  s.hardTerminator = v;
-  saveSettings(s);
-});
-
-showMinorGrid.subscribe((v) => {
-  const s = loadSettings();
-  s.showMinorGrid = v;
-  saveSettings(s);
-});
-
-showMajorGrid.subscribe((v) => {
-  const s = loadSettings();
-  s.showMajorGrid = v;
-  saveSettings(s);
-});
+axialTilt.subscribe((v) => updateAndSave((s) => { s.axialTilt = v; }));
+hardTerminator.subscribe((v) => updateAndSave((s) => { s.hardTerminator = v; }));
+showMinorGrid.subscribe((v) => updateAndSave((s) => { s.showMinorGrid = v; }));
+showMajorGrid.subscribe((v) => updateAndSave((s) => { s.showMajorGrid = v; }));
 
 showEquatorTropics.subscribe((v) => {
-  const s = loadSettings();
-  s.showEquatorTropics = v;
-  saveSettings(s);
-  // Labels can't show without lines
+  updateAndSave((s) => { s.showEquatorTropics = v; });
   if (!v) showEquatorTropicsLabels.set(false);
 });
-
-showEquatorTropicsLabels.subscribe((v) => {
-  const s = loadSettings();
-  s.showEquatorTropicsLabels = v;
-  saveSettings(s);
-});
+showEquatorTropicsLabels.subscribe((v) => updateAndSave((s) => { s.showEquatorTropicsLabels = v; }));
 
 showArcticCircles.subscribe((v) => {
-  const s = loadSettings();
-  s.showArcticCircles = v;
-  saveSettings(s);
-  // Labels can't show without lines
+  updateAndSave((s) => { s.showArcticCircles = v; });
   if (!v) showArcticCirclesLabels.set(false);
 });
+showArcticCirclesLabels.subscribe((v) => updateAndSave((s) => { s.showArcticCirclesLabels = v; }));
 
-showArcticCirclesLabels.subscribe((v) => {
-  const s = loadSettings();
-  s.showArcticCirclesLabels = v;
-  saveSettings(s);
-});
-
-showContinentLabels.subscribe((v) => {
-  const s = loadSettings();
-  s.showContinentLabels = v;
-  saveSettings(s);
-});
-
-showOceanLabels.subscribe((v) => {
-  const s = loadSettings();
-  s.showOceanLabels = v;
-  saveSettings(s);
-});
-
-showSubsolarPoint.subscribe((v) => {
-  const s = loadSettings();
-  s.showSubsolarPoint = v;
-  saveSettings(s);
-});
-
-showNightLights.subscribe((v) => {
-  const s = loadSettings();
-  s.showNightLights = v;
-  saveSettings(s);
-});
-
-showSunInfo.subscribe((v) => {
-  const s = loadSettings();
-  s.showSunInfo = v;
-  saveSettings(s);
-});
-
-useLocalTime.subscribe((v) => {
-  const s = loadSettings();
-  s.useLocalTime = v;
-  saveSettings(s);
-});
-
-showGlobe.subscribe((v) => {
-  const s = loadSettings();
-  s.showGlobe = v;
-  saveSettings(s);
-});
-
-showProjection.subscribe((v) => {
-  const s = loadSettings();
-  s.showProjection = v;
-  saveSettings(s);
-});
-
-showOrrery.subscribe((v) => {
-  const s = loadSettings();
-  s.showOrrery = v;
-  saveSettings(s);
-});
-
-showSundial.subscribe((v) => {
-  const s = loadSettings();
-  s.showSundial = v;
-  saveSettings(s);
-});
-
-showSettingsPanel.subscribe((v) => {
-  const s = loadSettings();
-  s.showSettingsPanel = v;
-  saveSettings(s);
-});
+showContinentLabels.subscribe((v) => updateAndSave((s) => { s.showContinentLabels = v; }));
+showOceanLabels.subscribe((v) => updateAndSave((s) => { s.showOceanLabels = v; }));
+showSubsolarPoint.subscribe((v) => updateAndSave((s) => { s.showSubsolarPoint = v; }));
+showNightLights.subscribe((v) => updateAndSave((s) => { s.showNightLights = v; }));
+showSunInfo.subscribe((v) => updateAndSave((s) => { s.showSunInfo = v; }));
+useLocalTime.subscribe((v) => updateAndSave((s) => { s.useLocalTime = v; }));
+showGlobe.subscribe((v) => updateAndSave((s) => { s.showGlobe = v; }));
+showProjection.subscribe((v) => updateAndSave((s) => { s.showProjection = v; }));
+showOrrery.subscribe((v) => updateAndSave((s) => { s.showOrrery = v; }));
+showSundial.subscribe((v) => updateAndSave((s) => { s.showSundial = v; }));
+showSettingsPanel.subscribe((v) => updateAndSave((s) => { s.showSettingsPanel = v; }));
 
 currentThemeId.subscribe((v) => {
-  const s = loadSettings();
-  s.themeId = v;
-  saveSettings(s);
+  updateAndSave((s) => { s.themeId = v; });
   applyTheme(getThemeById(v));
 });
 
@@ -266,16 +183,16 @@ export const cameraLatitude = writable<number>(initial.location.lat);
 export const userTimezone = derived(userLocation, ($loc) => lookupTimezone($loc.lat, $loc.lon));
 
 userLocation.subscribe((v) => {
-  const s = loadSettings();
-  s.location = v;
-  // Add to recent locations (dedup by lat/lon, keep most recent first)
-  const filtered = s.recentLocations.filter(
-    (r) => !(r.lat === v.lat && r.lon === v.lon),
-  );
-  filtered.unshift(v);
-  s.recentLocations = filtered.slice(0, MAX_RECENT_LOCATIONS);
-  recentLocations.set(s.recentLocations);
-  saveSettings(s);
+  updateAndSave((s) => {
+    s.location = v;
+    // Add to recent locations (dedup by lat/lon, keep most recent first)
+    const filtered = s.recentLocations.filter(
+      (r) => !(r.lat === v.lat && r.lon === v.lon),
+    );
+    filtered.unshift(v);
+    s.recentLocations = filtered.slice(0, MAX_RECENT_LOCATIONS);
+  });
+  recentLocations.set(cached.recentLocations);
   // Move camera to view from this latitude
   cameraLatitude.set(v.lat);
 });

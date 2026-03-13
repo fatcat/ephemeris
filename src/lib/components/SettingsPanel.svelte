@@ -15,28 +15,12 @@
     showSundial,
     cameraLatitude,
     userLocation,
-    type UserLocation,
   } from '../stores/settings.js';
 
-  let hard = $state(false);
-  let globeOn = $state(true);
-  let projOn = $state(true);
-  let orreryOn = $state(false);
-  let sundialOn = $state(false);
-  let camLat = $state(0);
-  let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
   let gearOpen = $state(false);
   let aboutOpen = $state(false);
   let gearBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
   let aboutBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
-
-  hardTerminator.subscribe((v) => (hard = v));
-  showGlobe.subscribe((v) => (globeOn = v));
-  showProjection.subscribe((v) => (projOn = v));
-  showOrrery.subscribe((v) => (orreryOn = v));
-  showSundial.subscribe((v) => (sundialOn = v));
-  cameraLatitude.subscribe((v) => (camLat = v));
-  userLocation.subscribe((v) => (loc = v));
 
   /** Toggle a view store, but prevent turning off the last active view. */
   function toggleView(store: typeof showGlobe) {
@@ -111,37 +95,37 @@
       <div class="view-toggle" role="group" aria-label="Toggle views">
         <button
           class="btn btn-vt"
-          class:active={globeOn}
+          class:active={$showGlobe}
           onclick={() => toggleView(showGlobe)}
           aria-label="Toggle globe view"
-          aria-pressed={globeOn}
+          aria-pressed={$showGlobe}
         >
           Globe
         </button>
         <button
           class="btn btn-vt"
-          class:active={projOn}
+          class:active={$showProjection}
           onclick={() => toggleView(showProjection)}
           aria-label="Toggle projection view"
-          aria-pressed={projOn}
+          aria-pressed={$showProjection}
         >
           Proj
         </button>
         <button
           class="btn btn-vt"
-          class:active={orreryOn}
+          class:active={$showOrrery}
           onclick={() => toggleView(showOrrery)}
           aria-label="Toggle orrery view"
-          aria-pressed={orreryOn}
+          aria-pressed={$showOrrery}
         >
           Orrery
         </button>
         <button
           class="btn btn-vt"
-          class:active={sundialOn}
+          class:active={$showSundial}
           onclick={() => toggleView(showSundial)}
           aria-label="Toggle sundial view"
-          aria-pressed={sundialOn}
+          aria-pressed={$showSundial}
         >
           Dial
         </button>
@@ -152,7 +136,7 @@
       <div class="terminator-toggle" role="group" aria-label="Terminator style">
         <button
           class="btn btn-vt"
-          class:active={!hard}
+          class:active={!$hardTerminator}
           onclick={() => hardTerminator.set(false)}
           aria-label="Soft terminator with twilight gradient"
         >
@@ -160,7 +144,7 @@
         </button>
         <button
           class="btn btn-vt"
-          class:active={hard}
+          class:active={$hardTerminator}
           onclick={() => hardTerminator.set(true)}
           aria-label="Hard terminator with sharp edge"
         >
@@ -180,7 +164,7 @@
       >
         <button
           class="btn btn-vt"
-          class:active={camLat === -23.44}
+          class:active={$cameraLatitude === -23.44}
           onclick={() => cameraLatitude.set(-23.44)}
           aria-label="View from Tropic of Capricorn"
         >
@@ -188,7 +172,7 @@
         </button>
         <button
           class="btn btn-vt"
-          class:active={camLat === 0}
+          class:active={$cameraLatitude === 0}
           onclick={() => cameraLatitude.set(0)}
           aria-label="View from equator"
         >
@@ -196,7 +180,7 @@
         </button>
         <button
           class="btn btn-vt"
-          class:active={camLat === 23.44}
+          class:active={$cameraLatitude === 23.44}
           onclick={() => cameraLatitude.set(23.44)}
           aria-label="View from Tropic of Cancer"
         >
@@ -204,11 +188,11 @@
         </button>
         <button
           class="btn btn-vt"
-          class:active={camLat === loc.lat &&
-            camLat !== -23.44 &&
-            camLat !== 0 &&
-            camLat !== 23.44}
-          onclick={() => cameraLatitude.set(loc.lat)}
+          class:active={$cameraLatitude === $userLocation.lat &&
+            $cameraLatitude !== -23.44 &&
+            $cameraLatitude !== 0 &&
+            $cameraLatitude !== 23.44}
+          onclick={() => cameraLatitude.set($userLocation.lat)}
           aria-label="View from home location"
         >
           Home

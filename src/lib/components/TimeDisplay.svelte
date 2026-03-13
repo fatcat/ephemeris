@@ -4,22 +4,15 @@
     formattedTime,
     playbackMode,
     resetToRealtime,
-    type PlaybackMode,
   } from '../stores/time.js';
   import { useLocalTime, userTimezone } from '../stores/settings.js';
   import { getUtcOffsetMs, getTimezoneAbbr } from '../utils/timezone.js';
 
-  let time: string = $state('');
-  let mode: PlaybackMode = $state('realtime');
-  let localTime = $state(false);
-  let tz = $state('Etc/UTC');
-  let rawTime: Date = $state(new Date());
-
-  formattedTime.subscribe((v) => (time = v));
-  playbackMode.subscribe((v) => (mode = v));
-  useLocalTime.subscribe((v) => (localTime = v));
-  userTimezone.subscribe((v) => (tz = v));
-  currentTime.subscribe((v) => (rawTime = v));
+  let time = $derived($formattedTime);
+  let mode = $derived($playbackMode);
+  let localTime = $derived($useLocalTime);
+  let tz = $derived($userTimezone);
+  let rawTime = $derived($currentTime);
 
   function formatLocal(d: Date, timeZone: string): string {
     const offsetMs = getUtcOffsetMs(d, timeZone);

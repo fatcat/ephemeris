@@ -11,25 +11,19 @@
   const positiveSmoothSpeeds = SMOOTH_SPEEDS.filter((s) => s > 0);
   const positiveSnapIntervals = SNAP_INTERVALS.filter((s) => s > 0);
 
-  let mode: PlaybackMode = $state('realtime');
-  let playing: boolean = $state(true);
-  let speed: number = $state(1);
-  let interval: number = $state(1);
-  let reverse: boolean = $state(false);
+  let mode: PlaybackMode = $derived($playbackMode);
+  let playing: boolean = $derived($isPlaying);
+  let speed: number = $derived(Math.abs($playbackSpeed));
+  let interval: number = $derived(Math.abs($snapInterval));
+  let reverse: boolean = $derived(
+    mode === 'snap' ? $snapInterval < 0 : $playbackSpeed < 0,
+  );
   let lastSelectedMode: 'smooth' | 'snap' = $state('smooth');
 
-  playbackMode.subscribe((v) => {
-    mode = v;
-    if (v === 'smooth' || v === 'snap') lastSelectedMode = v;
-  });
-  isPlaying.subscribe((v) => (playing = v));
-  playbackSpeed.subscribe((v) => {
-    reverse = v < 0;
-    speed = Math.abs(v);
-  });
-  snapInterval.subscribe((v) => {
-    reverse = v < 0;
-    interval = Math.abs(v);
+  $effect(() => {
+    if ($playbackMode === 'smooth' || $playbackMode === 'snap') {
+      lastSelectedMode = $playbackMode;
+    }
   });
 
   function ensureNonRealtime() {
@@ -51,7 +45,6 @@
   function rewind() {
     ensureNonRealtime();
     if (!reverse) {
-      reverse = true;
       if (mode === 'smooth') playbackSpeed.update((v) => -Math.abs(v));
       if (mode === 'snap') snapInterval.update((v) => -Math.abs(v));
     }
@@ -61,7 +54,6 @@
   function fastForward() {
     ensureNonRealtime();
     if (reverse) {
-      reverse = false;
       if (mode === 'smooth') playbackSpeed.update((v) => Math.abs(v));
       if (mode === 'snap') snapInterval.update((v) => Math.abs(v));
     }
@@ -79,14 +71,12 @@
   }
 
   function selectSpeed(s: number) {
-    speed = s;
     playbackSpeed.set(reverse ? -s : s);
     playbackMode.set('smooth');
     isPlaying.set(true);
   }
 
   function selectInterval(d: number) {
-    interval = d;
     snapInterval.set(reverse ? -d : d);
     playbackMode.set('snap');
     isPlaying.set(true);

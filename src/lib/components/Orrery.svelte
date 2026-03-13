@@ -22,7 +22,6 @@
     showMajorGrid,
     showMinorGrid,
     userLocation,
-    type UserLocation,
   } from '../stores/settings.js';
   import { getThemeById } from '../themes.js';
 
@@ -36,36 +35,26 @@
   let container: HTMLDivElement;
   let orreryScene: OrreryScene | null = $state(null);
   let controls: OrbitControls | null = $state(null);
-  let tilt = $state(REAL_AXIAL_TILT);
+  let tilt = $derived($axialTilt);
   let prevTilt = REAL_AXIAL_TILT;
-  axialTilt.subscribe((v) => (tilt = v));
 
-  let themeId = $state('charcoal');
-  currentThemeId.subscribe((v) => (themeId = v));
+  let themeId = $derived($currentThemeId);
 
-  let hard = $state(false);
-  hardTerminator.subscribe((v) => (hard = v));
+  let hard = $derived($hardTerminator);
 
-  let nightLights = $state(true);
-  showNightLights.subscribe((v) => (nightLights = v));
+  let nightLights = $derived($showNightLights);
 
-  let subsolar = $state(true);
-  showSubsolarPoint.subscribe((v) => (subsolar = v));
+  let subsolar = $derived($showSubsolarPoint);
 
-  let eqTropics = $state(false);
-  showEquatorTropics.subscribe((v) => (eqTropics = v));
+  let eqTropics = $derived($showEquatorTropics);
 
-  let arcticCirc = $state(false);
-  showArcticCircles.subscribe((v) => (arcticCirc = v));
+  let arcticCirc = $derived($showArcticCircles);
 
-  let majorGrid = $state(true);
-  showMajorGrid.subscribe((v) => (majorGrid = v));
+  let majorGrid = $derived($showMajorGrid);
 
-  let minorGrid = $state(false);
-  showMinorGrid.subscribe((v) => (minorGrid = v));
+  let minorGrid = $derived($showMinorGrid);
 
-  let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
-  userLocation.subscribe((v) => (loc = v));
+  let loc = $derived($userLocation);
 
   const DEG_TO_RAD = Math.PI / 180;
 
@@ -247,7 +236,7 @@
     left: 50%;
     transform: translateX(-50%);
     font-size: 1.5rem;
-    font-style: bold;
+    font-weight: bold;
     color: rgba(230, 230, 240, 0.7);
     pointer-events: none;
     z-index: 1;

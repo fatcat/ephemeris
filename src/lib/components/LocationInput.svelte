@@ -6,21 +6,19 @@
   type Place = [name: string, country: string, lat: number, lon: number];
   const places: Place[] = placesData as Place[];
 
+  let loc = $derived($userLocation);
   let query = $state('');
-  let lat = $state(0);
-  let lon = $state(0);
-  let recent: UserLocation[] = $state([]);
+  let lat = $derived(loc.lat);
+  let lon = $derived(loc.lon);
+  let recent: UserLocation[] = $derived($recentLocations);
   let showInfo = $state(false);
   let results: Place[] = $state([]);
   let showResults = $state(false);
   let highlightIdx = $state(-1);
 
-  userLocation.subscribe((v) => {
-    query = v.name;
-    lat = v.lat;
-    lon = v.lon;
+  $effect(() => {
+    query = loc.name;
   });
-  recentLocations.subscribe((v) => (recent = v));
 
   function searchPlaces(q: string): Place[] {
     if (q.length < 2) return [];

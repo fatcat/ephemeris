@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { SvelteSet } from 'svelte/reactivity';
   import { get } from 'svelte/store';
   import { createSundialScene, type SundialScene } from '../three/sundialScene.js';
   import { currentTime } from '../stores/time.js';
@@ -15,19 +14,17 @@
   let container: HTMLDivElement;
   let sundialScene: SundialScene | null = $state(null);
 
-  let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
-  userLocation.subscribe((v) => (loc = v));
+  let loc: UserLocation = $derived($userLocation);
 
-  let themeId = $state('charcoal');
-  currentThemeId.subscribe((v) => (themeId = v));
+  let themeId = $derived($currentThemeId);
 
   /**
    * Compute which integer hour offsets from noon (-6..+6) have sunlight.
    * Uses sunrise/sunset to determine the range.
    */
-  function computeLitHours(date: Date, latDeg: number, lonDeg: number): SvelteSet<number> {
+  function computeLitHours(date: Date, latDeg: number, lonDeg: number): Set<number> {
     const { sunrise, sunset, dayLength } = sunriseSunset(date, latDeg, lonDeg);
-    const hours = new SvelteSet<number>();
+    const hours = new Set<number>();
 
     if (dayLength >= 24) {
       // Polar day: all hours lit

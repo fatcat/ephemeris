@@ -2,11 +2,7 @@
   import { currentTime, setTime } from '../stores/time.js';
   import { findEquinoxOrSolstice } from '../astronomy/solar.js';
 
-  let year: number = $state(new Date().getUTCFullYear());
-
-  currentTime.subscribe((t) => {
-    year = t.getUTCFullYear();
-  });
+  let year: number = $derived($currentTime.getUTCFullYear());
 
   const presets = $derived([
     { label: 'Mar Eq', date: findEquinoxOrSolstice(year, 0) },

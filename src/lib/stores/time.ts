@@ -65,8 +65,8 @@ sunDirection.subscribe((dir) => {
   cachedSunDir = dir;
 });
 
-/** Get the current sun direction without subscribing */
-export function getSunDirection(): Vector3 {
+/** Get the current sun direction without subscribing (do not mutate) */
+export function getSunDirection(): Readonly<Vector3> {
   return cachedSunDir;
 }
 
@@ -114,8 +114,9 @@ function startSnapTimer(): void {
     const days = get(snapInterval);
     const deltaMs = days * 24 * 60 * 60 * 1000;
     currentTime.update((t) => {
-      const next = clampTime(t.getTime() + deltaMs);
-      if (next !== t.getTime() + deltaMs) {
+      const raw = t.getTime() + deltaMs;
+      const next = clampTime(raw);
+      if (next !== raw) {
         isPlaying.set(false);
       }
       return new Date(next);

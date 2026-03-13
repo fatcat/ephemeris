@@ -20,11 +20,9 @@
     showNightLights,
     userLocation,
     axialTilt,
-    REAL_AXIAL_TILT,
     currentThemeId,
-    type UserLocation,
   } from '../stores/settings.js';
-  import { getThemeById, type Theme } from '../themes.js';
+  import { getThemeById } from '../themes.js';
   import { updateSunMarkerProjection } from '../three/sunMarker.js';
   import { updateLocationMarkerProjection } from '../three/locationMarker.js';
   import { lonToPercent, latToPercent } from '../utils/geo.js';
@@ -40,34 +38,20 @@
 
   let container: HTMLDivElement;
   let projScene: ProjectionScene | null = $state(null);
-  let hard = $state(false);
-  let minorGrid = $state(true);
-  let majorGrid = $state(true);
-  let eqTropics = $state(true);
-  let eqTropicsLabels = $state(true);
-  let arcticCirc = $state(true);
-  let arcticCircLabels = $state(true);
-  let continentLabels = $state(true);
-  let oceanLabels = $state(true);
-  let subsolar = $state(true);
-  let nightLights = $state(true);
-  let loc: UserLocation = $state({ name: '', lat: 0, lon: 0 });
-  let tilt = $state(REAL_AXIAL_TILT);
-  hardTerminator.subscribe((v) => (hard = v));
-  showMinorGrid.subscribe((v) => (minorGrid = v));
-  showMajorGrid.subscribe((v) => (majorGrid = v));
-  showEquatorTropics.subscribe((v) => (eqTropics = v));
-  showEquatorTropicsLabels.subscribe((v) => (eqTropicsLabels = v));
-  showArcticCircles.subscribe((v) => (arcticCirc = v));
-  showArcticCirclesLabels.subscribe((v) => (arcticCircLabels = v));
-  showContinentLabels.subscribe((v) => (continentLabels = v));
-  showOceanLabels.subscribe((v) => (oceanLabels = v));
-  showSubsolarPoint.subscribe((v) => (subsolar = v));
-  showNightLights.subscribe((v) => (nightLights = v));
-  userLocation.subscribe((v) => (loc = v));
-  axialTilt.subscribe((v) => (tilt = v));
-  let currentTheme: Theme = $state(getThemeById('midnight'));
-  currentThemeId.subscribe((v) => (currentTheme = getThemeById(v)));
+  let hard = $derived($hardTerminator);
+  let minorGrid = $derived($showMinorGrid);
+  let majorGrid = $derived($showMajorGrid);
+  let eqTropics = $derived($showEquatorTropics);
+  let eqTropicsLabels = $derived($showEquatorTropicsLabels);
+  let arcticCirc = $derived($showArcticCircles);
+  let arcticCircLabels = $derived($showArcticCirclesLabels);
+  let continentLabels = $derived($showContinentLabels);
+  let oceanLabels = $derived($showOceanLabels);
+  let subsolar = $derived($showSubsolarPoint);
+  let nightLights = $derived($showNightLights);
+  let loc = $derived($userLocation);
+  let tilt = $derived($axialTilt);
+  let currentTheme = $derived(getThemeById($currentThemeId));
 
   // Geo labels (continents, oceans, seas only)
   const allLabels = labelsData as GeoLabel[];

@@ -222,10 +222,10 @@ export function findEquinoxOrSolstice(year: number, targetLongitude: number): Da
 
   const [month, day] = approx[targetLongitude] ?? [2, 20];
   const center = Date.UTC(year, month, day, 12, 0, 0);
-  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
 
-  let lo = center - THREE_DAYS_MS;
-  let hi = center + THREE_DAYS_MS;
+  let lo = center - FIVE_DAYS_MS;
+  let hi = center + FIVE_DAYS_MS;
 
   // Binary search: find when apparentLongitude crosses targetLongitude
   for (let i = 0; i < 25; i++) {
@@ -352,12 +352,8 @@ export function sunriseSunset(
   // Solar noon: 12:00 UTC minus equation of time, adjusted for longitude
   const eotMinutes = equationOfTime(noon, customObliquityDeg);
   const solarNoonMinutes = 720 - lonDeg * 4 - eotMinutes; // minutes from midnight UTC
-  const solarNoonDate = new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-  ));
-  solarNoonDate.setUTCMinutes(Math.round(solarNoonMinutes));
+  const midnightUtc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const solarNoonDate = new Date(midnightUtc + solarNoonMinutes * 60000);
 
   // Hour angle at sunrise/sunset
   // cos(HA) = (sin(-0.833°) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))

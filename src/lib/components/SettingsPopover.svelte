@@ -31,41 +31,6 @@
 
   let popoverEl: HTMLDivElement;
 
-  let minorGrid = $state(true);
-  let majorGrid = $state(true);
-  let eqTropics = $state(true);
-  let eqTropicsLabels = $state(true);
-  let arcticCirc = $state(true);
-  let arcticCircLabels = $state(true);
-  let continentLabels = $state(true);
-  let oceanLabels = $state(true);
-  let subsolar = $state(true);
-  let nightLights = $state(true);
-  let sunInfo = $state(true);
-  let localTime = $state(false);
-  let tilt = $state(REAL_AXIAL_TILT);
-  let themeId = $state('midnight');
-
-  showMinorGrid.subscribe((v) => (minorGrid = v));
-  showMajorGrid.subscribe((v) => (majorGrid = v));
-  showEquatorTropics.subscribe((v) => (eqTropics = v));
-  showEquatorTropicsLabels.subscribe((v) => (eqTropicsLabels = v));
-  showArcticCircles.subscribe((v) => (arcticCirc = v));
-  showArcticCirclesLabels.subscribe((v) => (arcticCircLabels = v));
-  showContinentLabels.subscribe((v) => (continentLabels = v));
-  showOceanLabels.subscribe((v) => (oceanLabels = v));
-  showSubsolarPoint.subscribe((v) => (subsolar = v));
-  showNightLights.subscribe((v) => (nightLights = v));
-  showSunInfo.subscribe((v) => (sunInfo = v));
-  useLocalTime.subscribe((v) => (localTime = v));
-  axialTilt.subscribe((v) => (tilt = v));
-  currentThemeId.subscribe((v) => (themeId = v));
-
-  function onThemeChange(e: Event) {
-    const id = (e.target as HTMLSelectElement).value;
-    currentThemeId.set(id);
-  }
-
   // Info popup state
   let openInfo: string | null = $state(null);
 
@@ -80,12 +45,12 @@
       urlLabel: 'Axial tilt on Wikipedia',
     },
     equatorTropics: {
-      text: `The equator (0\u00B0) is equidistant from both poles. The tropics mark the northernmost (${tilt.toFixed(1)}\u00B0N) and southernmost (${tilt.toFixed(1)}\u00B0S) latitudes where the sun can appear directly overhead.`,
+      text: `The equator (0\u00B0) is equidistant from both poles. The tropics mark the northernmost (${$axialTilt.toFixed(1)}\u00B0N) and southernmost (${$axialTilt.toFixed(1)}\u00B0S) latitudes where the sun can appear directly overhead.`,
       url: 'https://en.wikipedia.org/wiki/Tropics',
       urlLabel: 'Tropics on Wikipedia',
     },
     arcticCircles: {
-      text: `The polar circles (${(90 - tilt).toFixed(1)}\u00B0N/S) mark the boundary where 24-hour daylight or darkness occurs at least once per year.`,
+      text: `The polar circles (${(90 - $axialTilt).toFixed(1)}\u00B0N/S) mark the boundary where 24-hour daylight or darkness occurs at least once per year.`,
       url: 'https://en.wikipedia.org/wiki/Arctic_Circle',
       urlLabel: 'Arctic Circle on Wikipedia',
     },
@@ -124,17 +89,16 @@
       <select
         id="theme-select"
         class="theme-select"
-        value={themeId}
-        onchange={onThemeChange}
+        bind:value={$currentThemeId}
       >
         <optgroup label="Dark">
           {#each darkThemes as t (t.id)}
-            <option value={t.id} selected={t.id === themeId}>{t.name}</option>
+            <option value={t.id} selected={t.id === $currentThemeId}>{t.name}</option>
           {/each}
         </optgroup>
         <optgroup label="Light">
           {#each lightThemes as t (t.id)}
-            <option value={t.id} selected={t.id === themeId}>{t.name}</option>
+            <option value={t.id} selected={t.id === $currentThemeId}>{t.name}</option>
           {/each}
         </optgroup>
       </select>
@@ -143,8 +107,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={localTime}
-        onchange={() => useLocalTime.set(!localTime)}
+        bind:checked={$useLocalTime}
       />
       <span>Use Local Time</span>
     </label>
@@ -152,8 +115,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={majorGrid}
-        onchange={() => showMajorGrid.set(!majorGrid)}
+        bind:checked={$showMajorGrid}
       />
       <span>Major Grid Lines</span>
     </label>
@@ -161,8 +123,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={minorGrid}
-        onchange={() => showMinorGrid.set(!minorGrid)}
+        bind:checked={$showMinorGrid}
       />
       <span>Minor Grid Lines</span>
     </label>
@@ -170,8 +131,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={continentLabels}
-        onchange={() => showContinentLabels.set(!continentLabels)}
+        bind:checked={$showContinentLabels}
       />
       <span>Continent Names</span>
     </label>
@@ -179,8 +139,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={oceanLabels}
-        onchange={() => showOceanLabels.set(!oceanLabels)}
+        bind:checked={$showOceanLabels}
       />
       <span>Ocean Names</span>
     </label>
@@ -188,8 +147,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={nightLights}
-        onchange={() => showNightLights.set(!nightLights)}
+        bind:checked={$showNightLights}
       />
       <span>Night Lights</span>
     </label>
@@ -197,8 +155,7 @@
     <label class="toggle-row">
       <input
         type="checkbox"
-        checked={sunInfo}
-        onchange={() => showSunInfo.set(!sunInfo)}
+        bind:checked={$showSunInfo}
       />
       <span>Sun Data Panel</span>
     </label>
@@ -207,17 +164,15 @@
       <label class="toggle-row">
         <input
           type="checkbox"
-          checked={eqTropics}
-          onchange={() => showEquatorTropics.set(!eqTropics)}
+          bind:checked={$showEquatorTropics}
         />
         <span>Equator & Tropics</span>
       </label>
-      <label class="toggle-row-inline" class:disabled={!eqTropics}>
+      <label class="toggle-row-inline" class:disabled={!$showEquatorTropics}>
         <input
           type="checkbox"
-          checked={eqTropicsLabels}
-          disabled={!eqTropics}
-          onchange={() => showEquatorTropicsLabels.set(!eqTropicsLabels)}
+          bind:checked={$showEquatorTropicsLabels}
+          disabled={!$showEquatorTropics}
         />
         <span>Labels</span>
       </label>
@@ -240,17 +195,15 @@
       <label class="toggle-row">
         <input
           type="checkbox"
-          checked={arcticCirc}
-          onchange={() => showArcticCircles.set(!arcticCirc)}
+          bind:checked={$showArcticCircles}
         />
         <span>Arctic/Antarctic Circles</span>
       </label>
-      <label class="toggle-row-inline" class:disabled={!arcticCirc}>
+      <label class="toggle-row-inline" class:disabled={!$showArcticCircles}>
         <input
           type="checkbox"
-          checked={arcticCircLabels}
-          disabled={!arcticCirc}
-          onchange={() => showArcticCirclesLabels.set(!arcticCircLabels)}
+          bind:checked={$showArcticCirclesLabels}
+          disabled={!$showArcticCircles}
         />
         <span>Labels</span>
       </label>
@@ -273,8 +226,7 @@
       <label class="toggle-row">
         <input
           type="checkbox"
-          checked={subsolar}
-          onchange={() => showSubsolarPoint.set(!subsolar)}
+          bind:checked={$showSubsolarPoint}
         />
         <span>Subsolar Point</span>
       </label>
@@ -305,13 +257,13 @@
           min="0"
           max="90"
           step="0.5"
-          value={tilt}
+          value={$axialTilt}
           oninput={(e) =>
             axialTilt.set(Number((e.target as HTMLInputElement).value))}
           aria-label="Axial tilt in degrees"
         />
-        <span class="tilt-value">{tilt.toFixed(2)}&deg;</span>
-        {#if tilt !== REAL_AXIAL_TILT}
+        <span class="tilt-value">{$axialTilt.toFixed(2)}&deg;</span>
+        {#if $axialTilt !== REAL_AXIAL_TILT}
           <button
             class="btn tilt-reset"
             onclick={() => axialTilt.set(REAL_AXIAL_TILT)}
