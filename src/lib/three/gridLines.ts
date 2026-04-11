@@ -163,6 +163,14 @@ export function createGlobeGrid(tiltDeg: number = DEFAULT_TILT): GlobeGrid {
   return { group, majorLines, minorLines, equatorTropicsLines, arcticCircleLines };
 }
 
+/** Dispose all geometry and materials in the entire grid. */
+export function disposeGrid(grid: GlobeGrid): void {
+  clearLineGroup(grid.majorLines);
+  clearLineGroup(grid.minorLines);
+  clearLineGroup(grid.equatorTropicsLines);
+  clearLineGroup(grid.arcticCircleLines);
+}
+
 /**
  * Rebuild the special latitude lines (tropics + arctic circles) for a new tilt.
  * Disposes old geometry and creates new LineSegments in place.

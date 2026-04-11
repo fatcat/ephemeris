@@ -34,7 +34,7 @@ import {
   type ShaderMaterial,
 } from 'three';
 import { createEarthShaderMaterial } from './earthShader.js';
-import { createGlobeGrid, type GlobeGrid } from './gridLines.js';
+import { createGlobeGrid, disposeGrid, type GlobeGrid } from './gridLines.js';
 import { createSunMarkerGlobe } from './sunMarker.js';
 import { createLocationMarkerGlobe } from './locationMarker.js';
 import { createPolePins } from './polePins.js';
@@ -234,6 +234,17 @@ export function createOrreryScene(
     earthMaterial.dispose();
     orbitGeo.dispose();
     orbitMat.dispose();
+    disposeGrid(grid);
+    sunMarker.geometry.dispose();
+    (sunMarker.material as import('three').Material).dispose();
+    locationMarker.geometry.dispose();
+    (locationMarker.material as import('three').Material).dispose();
+    polePins.traverse((child) => {
+      if (child instanceof Mesh) {
+        child.geometry.dispose();
+        (child.material as import('three').Material).dispose();
+      }
+    });
     renderer.domElement.remove();
   }
 

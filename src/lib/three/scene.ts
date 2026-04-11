@@ -8,9 +8,10 @@ import {
   TextureLoader,
   type Texture,
   type ShaderMaterial,
+  type Material,
 } from 'three';
 import { createEarthShaderMaterial } from './earthShader.js';
-import { createGlobeGrid, type GlobeGrid } from './gridLines.js';
+import { createGlobeGrid, disposeGrid, type GlobeGrid } from './gridLines.js';
 import {
   createCoastlineOverlay,
   createRiverOverlay,
@@ -116,10 +117,24 @@ export function createGlobeScene(
     renderer.setSize(width, height);
   }
 
+  function disposeMesh(mesh: Mesh) {
+    mesh.geometry.dispose();
+    (mesh.material as Material).dispose();
+  }
+
   function dispose() {
     renderer.dispose();
     geometry.dispose();
     material.dispose();
+    disposeGrid(grid);
+    coastlineOverlay.dispose();
+    riverOverlay.dispose();
+    lakeOverlay.dispose();
+    disposeMesh(sunMarker);
+    disposeMesh(locationMarker);
+    polePins.traverse((child) => {
+      if (child instanceof Mesh) disposeMesh(child);
+    });
     renderer.domElement.remove();
   }
 

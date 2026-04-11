@@ -42,11 +42,6 @@ const BEVEL = 0.28;         // chamfer width on top edge of dial
 const INNER_RING_R = 6.5;   // decorative ring inside hour lines (around boss)
 const OUTER_RING_R = 11.40; // decorative ring between labels and rim
 
-//const ROMAN = [
-//  '', 'I', 'II', 'III', 'IV', 'V', 'VI',
-//  'VII', 'VIII', 'IX', 'X', 'XI', 'XII',
-//];
-
 const ROMAN = [
   '', '', 'II', 'III', 'IV', 'V', 'VI',
   'VII', 'VIII', 'IX', 'X', '', 'XII',
@@ -460,6 +455,12 @@ export function createSundialScene(container: HTMLElement): SundialScene {
     dialGeo.dispose();
     dialMat.dispose();
     dialTexture.dispose();
+    sunLight.shadow.map?.dispose();
+    scene.remove(sunLight);
+    scene.remove(sunLight.target);
+    scene.remove(ambientLight);
+    scene.remove(dialMesh);
+    scene.remove(dialGroup);
     controls.dispose();
     renderer.dispose();
     renderer.domElement.remove();

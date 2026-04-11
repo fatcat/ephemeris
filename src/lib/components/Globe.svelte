@@ -18,7 +18,6 @@
     userLocation,
     cameraLatitude,
     axialTilt,
-    REAL_AXIAL_TILT,
     currentThemeId,
   } from '../stores/settings.js';
   import { getThemeById } from '../themes.js';
@@ -53,8 +52,22 @@
   let nightLights = $derived($showNightLights);
   let loc = $derived($userLocation);
   let tilt = $derived($axialTilt);
-  let prevTilt = REAL_AXIAL_TILT;
   let currentTheme = $derived(getThemeById($currentThemeId));
+
+  let camLat = $derived($cameraLatitude);
+
+  // Update tilt-dependent visuals reactively
+  $effect(() => {
+    if (globeScene) {
+      globeScene.tiltGroup.rotation.z = -(tilt * Math.PI / 180);
+      updateSpecialLatitudes(globeScene.grid, tilt);
+    }
+  });
+
+  // Animate camera latitude changes reactively
+  $effect(() => {
+    globeControls?.setCameraLatitude(camLat);
+  });
 
   // Globe labels — always-visible set (continents, oceans, seas)
   const allLabels = labelsData as GeoLabel[];
@@ -133,68 +146,48 @@
     });
   }
 
+  /** Project a single label to screen coordinates; returns null if not visible. */
+  function projectLabel(
+    scene: GlobeScene,
+    label: GeoLabel | SpecialLabel,
+    show: boolean,
+    isSpecial: boolean,
+    maxOpacity: number,
+  ): LabelPos {
+    if (!show) return { label, x: 0, y: 0, opacity: 0, visible: false, isSpecial };
+
+    const [gx, gy, gz] = geoToGlobePosition(label.lat, label.lon, 1.01);
+    tmpVec.set(gx, gy, gz);
+    scene.spinGroup.localToWorld(tmpVec);
+
+    const facingFactor = tmpVec.z;
+    if (facingFactor < -0.05) return { label, x: 0, y: 0, opacity: 0, visible: false, isSpecial };
+
+    const opacity = facingFactor < 0.2
+      ? Math.max(0, (facingFactor + 0.05) / 0.25)
+      : maxOpacity;
+
+    const projected = tmpVec.project(scene.camera);
+    const x = (projected.x + 1) / 2 * containerRect.width;
+    const y = (1 - projected.y) / 2 * containerRect.height;
+
+    return { label, x, y, opacity, visible: true, isSpecial };
+  }
+
   /** Project globe labels to screen coordinates. */
   function updateGlobeLabels(scene: GlobeScene): void {
     if (containerRect.width === 0) return;
 
     const results: LabelPos[] = [];
-    const camera = scene.camera;
 
-    // Geo labels (conditional by type)
     for (const label of geoLabels) {
       const show = label.type === 'continent' ? continentLabels : oceanLabels;
-      if (!show) {
-        results.push({ label, x: 0, y: 0, opacity: 0, visible: false, isSpecial: false });
-        continue;
-      }
-      const [gx, gy, gz] = geoToGlobePosition(label.lat, label.lon, 1.01);
-      tmpVec.set(gx, gy, gz);
-      scene.spinGroup.localToWorld(tmpVec);
-
-      const facingFactor = tmpVec.z;
-      if (facingFactor < -0.05) {
-        results.push({ label, x: 0, y: 0, opacity: 0, visible: false, isSpecial: false });
-        continue;
-      }
-
-      const opacity = facingFactor < 0.2
-        ? Math.max(0, (facingFactor + 0.05) / 0.25)
-        : 0.85;
-
-      const projected = tmpVec.project(camera);
-      const x = (projected.x + 1) / 2 * containerRect.width;
-      const y = (1 - projected.y) / 2 * containerRect.height;
-
-      results.push({ label, x, y, opacity, visible: true, isSpecial: false });
+      results.push(projectLabel(scene, label, show, false, 0.85));
     }
 
-    // Special latitude labels (conditional visibility)
     for (const label of specialLabels) {
       const show = label.kind === 'warm' ? eqTropicsLabels : arcticCircLabels;
-      if (!show) {
-        results.push({ label, x: 0, y: 0, opacity: 0, visible: false, isSpecial: true });
-        continue;
-      }
-
-      const [gx, gy, gz] = geoToGlobePosition(label.lat, label.lon, 1.01);
-      tmpVec.set(gx, gy, gz);
-      scene.spinGroup.localToWorld(tmpVec);
-
-      const facingFactor = tmpVec.z;
-      if (facingFactor < -0.05) {
-        results.push({ label, x: 0, y: 0, opacity: 0, visible: false, isSpecial: true });
-        continue;
-      }
-
-      const opacity = facingFactor < 0.2
-        ? Math.max(0, (facingFactor + 0.05) / 0.25)
-        : 0.9;
-
-      const projected = tmpVec.project(camera);
-      const x = (projected.x + 1) / 2 * containerRect.width;
-      const y = (1 - projected.y) / 2 * containerRect.height;
-
-      results.push({ label, x, y, opacity, visible: true, isSpecial: true });
+      results.push(projectLabel(scene, label, show, true, 0.9));
     }
 
     labelPositions = results;
@@ -218,13 +211,6 @@
     globeScene.material.uniforms.uShowNightLights.value = nightLights ? 1.0 : 0.0;
     globeScene.material.uniforms.uMapBrightness.value = currentTheme.mapBrightness;
     globeScene.renderer.setClearColor(currentTheme.clearColor);
-
-    // Update visual tilt and grid lines when axial tilt changes
-    if (tilt !== prevTilt) {
-      globeScene.tiltGroup.rotation.z = -(tilt * DEG_TO_RAD);
-      updateSpecialLatitudes(globeScene.grid, tilt);
-      prevTilt = tilt;
-    }
 
     // Update overlay sun direction uniforms
     globeScene.coastlineOverlay.updateSunDirection(sunDir);
@@ -264,16 +250,8 @@
     containerRect = { width: rect.width, height: rect.height };
     globeScene.resize(rect.width, rect.height);
 
-    // Set initial camera latitude instantly, then animate future changes
-    let camLatInitialized = false;
-    const unsubCamLat = cameraLatitude.subscribe((lat) => {
-      if (!camLatInitialized) {
-        globeControls?.setCameraLatitude(lat, true);
-        camLatInitialized = true;
-      } else {
-        globeControls?.setCameraLatitude(lat);
-      }
-    });
+    // Set initial camera latitude instantly (subsequent changes handled by $effect)
+    globeControls.setCameraLatitude(camLat, true);
 
     // Observe container resize
     const resizeObserver = new ResizeObserver((entries) => {
@@ -297,7 +275,6 @@
 
     return () => {
       cancelAnimationFrame(frameId);
-      unsubCamLat();
       resizeObserver.disconnect();
       globeControls?.dispose();
       globeScene?.dispose();

@@ -57,21 +57,25 @@ function createBarberPoleMaterial(): ShaderMaterial {
 export function createPolePins(): Group {
   const group = new Group();
 
-  const geometry = new CylinderGeometry(
+  const northGeo = new CylinderGeometry(
+    POLE_RADIUS, POLE_RADIUS, POLE_LENGTH,
+    RADIAL_SEGMENTS, HEIGHT_SEGMENTS, false,
+  );
+  const southGeo = new CylinderGeometry(
     POLE_RADIUS, POLE_RADIUS, POLE_LENGTH,
     RADIAL_SEGMENTS, HEIGHT_SEGMENTS, false,
   );
 
   // North pole — cylinder sticks up from the surface
   const northMat = createBarberPoleMaterial();
-  const northPole = new Mesh(geometry, northMat);
+  const northPole = new Mesh(northGeo, northMat);
   // Position so the bottom of the cylinder sits at the globe surface (y = 1.0)
   northPole.position.set(0, 1.0 + POLE_LENGTH / 2, 0);
   group.add(northPole);
 
   // South pole — cylinder sticks down from the surface
   const southMat = createBarberPoleMaterial();
-  const southPole = new Mesh(geometry, southMat);
+  const southPole = new Mesh(southGeo, southMat);
   southPole.position.set(0, -(1.0 + POLE_LENGTH / 2), 0);
   group.add(southPole);
 

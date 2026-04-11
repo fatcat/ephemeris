@@ -17,19 +17,13 @@
   let animationId = 0;
   let lastFrameTime = 0;
   let errorMessage: string | null = $state(null);
-  let sunInfoVisible = $state(true);
-  let panelVisible = $state(true);
 
-  let globeVisible = $state(true);
-  let projVisible = $state(true);
-  let orreryVisible = $state(false);
-  let sundialVisible = $state(false);
-  showGlobe.subscribe((v) => (globeVisible = v));
-  showProjection.subscribe((v) => (projVisible = v));
-  showOrrery.subscribe((v) => (orreryVisible = v));
-  showSundial.subscribe((v) => (sundialVisible = v));
-  showSunInfo.subscribe((v) => (sunInfoVisible = v));
-  showSettingsPanel.subscribe((v) => (panelVisible = v));
+  let globeVisible = $derived($showGlobe);
+  let projVisible = $derived($showProjection);
+  let orreryVisible = $derived($showOrrery);
+  let sundialVisible = $derived($showSundial);
+  let sunInfoVisible = $derived($showSunInfo);
+  let panelVisible = $derived($showSettingsPanel);
 
   // Canonical order of views (used to determine which are active)
   let activeViews = $derived(

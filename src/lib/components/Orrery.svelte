@@ -12,7 +12,6 @@
   import { solarPosition, greenwichMeanSiderealTime, julianDay } from '../astronomy/solar.js';
   import {
     axialTilt,
-    REAL_AXIAL_TILT,
     currentThemeId,
     hardTerminator,
     showNightLights,
@@ -36,25 +35,20 @@
   let orreryScene: OrreryScene | null = $state(null);
   let controls: OrbitControls | null = $state(null);
   let tilt = $derived($axialTilt);
-  let prevTilt = REAL_AXIAL_TILT;
-
   let themeId = $derived($currentThemeId);
-
   let hard = $derived($hardTerminator);
-
   let nightLights = $derived($showNightLights);
-
   let subsolar = $derived($showSubsolarPoint);
-
   let eqTropics = $derived($showEquatorTropics);
-
   let arcticCirc = $derived($showArcticCircles);
-
   let majorGrid = $derived($showMajorGrid);
-
   let minorGrid = $derived($showMinorGrid);
-
   let loc = $derived($userLocation);
+
+  // Update tilt-dependent grid lines reactively
+  $effect(() => {
+    if (orreryScene) updateSpecialLatitudes(orreryScene.grid, tilt);
+  });
 
   const DEG_TO_RAD = Math.PI / 180;
 
@@ -110,12 +104,6 @@
     // update() positions Earth on orbit, sets tilt + rotation, and returns
     // the sun direction in the Earth mesh's local/object space.
     const sunDirLocal = orreryScene.update(earthAngle, earthRotation, tiltRad);
-
-    // Update tilt-dependent grid lines when tilt changes
-    if (tilt !== prevTilt) {
-      updateSpecialLatitudes(orreryScene.grid, tilt);
-      prevTilt = tilt;
-    }
 
     // Update shader uniforms — sunDirection is geometric (Sun→Earth in local space)
     const mat = orreryScene.earthMaterial;

@@ -25,6 +25,8 @@ export interface OverlayGroup {
   group: Group;
   /** Update the sun direction uniform on all line materials in this group. */
   updateSunDirection: (sunDir: Vector3) => void;
+  /** Dispose all geometry and materials in this overlay. */
+  dispose: () => void;
 }
 
 // --- Day/night-aware line shaders ---
@@ -161,7 +163,7 @@ function createGeoLines(
   }
 
   if (positions.length === 0) {
-    return { group, updateSunDirection: () => {} };
+    return { group, updateSunDirection: () => {}, dispose: () => {} };
   }
 
   const geometry = new BufferGeometry();
@@ -185,7 +187,12 @@ function createGeoLines(
     material.uniforms.uSunDirection.value.copy(sunDir);
   }
 
-  return { group, updateSunDirection };
+  function dispose(): void {
+    geometry.dispose();
+    material.dispose();
+  }
+
+  return { group, updateSunDirection, dispose };
 }
 
 // --- Convenience exports ---

@@ -124,6 +124,13 @@ export function createProjectionScene(
     renderer.dispose();
     geometry.dispose();
     material.dispose();
+    coastlineOverlay.dispose();
+    riverOverlay.dispose();
+    lakeOverlay.dispose();
+    sunMarker.geometry.dispose();
+    sunMarker.material.dispose();
+    locationMarker.geometry.dispose();
+    locationMarker.material.dispose();
     renderer.domElement.remove();
   }
 

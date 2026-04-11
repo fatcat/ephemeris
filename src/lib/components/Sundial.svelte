@@ -23,7 +23,7 @@
    * Uses sunrise/sunset to determine the range.
    */
   function computeLitHours(date: Date, latDeg: number, lonDeg: number): Set<number> {
-    const { sunrise, sunset, dayLength } = sunriseSunset(date, latDeg, lonDeg);
+    const { sunrise, sunset, dayLength, solarNoon } = sunriseSunset(date, latDeg, lonDeg);
     const hours = new Set<number>();
 
     if (dayLength >= 24) {
@@ -37,9 +37,6 @@
     }
 
     if (!sunrise || !sunset) return hours;
-
-    // Compute solar noon in minutes from midnight UTC
-    const { solarNoon } = sunriseSunset(date, latDeg, lonDeg);
     const noonMs = solarNoon.getTime();
     const sunriseMs = sunrise.getTime();
     const sunsetMs = sunset.getTime();

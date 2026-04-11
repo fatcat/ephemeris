@@ -135,34 +135,44 @@ export const showSettingsPanel = writable<boolean>(initial.showSettingsPanel);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
 
-axialTilt.subscribe((v) => updateAndSave((s) => { s.axialTilt = v; }));
-hardTerminator.subscribe((v) => updateAndSave((s) => { s.hardTerminator = v; }));
-showMinorGrid.subscribe((v) => updateAndSave((s) => { s.showMinorGrid = v; }));
-showMajorGrid.subscribe((v) => updateAndSave((s) => { s.showMajorGrid = v; }));
+/** Sync a writable store to the persisted settings cache. */
+function syncSetting<K extends keyof Settings>(
+  store: import('svelte/store').Writable<Settings[K]>, key: K,
+) {
+  store.subscribe((v) => updateAndSave((s) => { s[key] = v; }));
+}
 
+// Plain-persist settings — value changes are saved automatically
+const syncedSettings: [import('svelte/store').Writable<unknown>, keyof Settings][] = [
+  [axialTilt, 'axialTilt'],
+  [hardTerminator, 'hardTerminator'],
+  [showMinorGrid, 'showMinorGrid'],
+  [showMajorGrid, 'showMajorGrid'],
+  [showEquatorTropicsLabels, 'showEquatorTropicsLabels'],
+  [showArcticCirclesLabels, 'showArcticCirclesLabels'],
+  [showContinentLabels, 'showContinentLabels'],
+  [showOceanLabels, 'showOceanLabels'],
+  [showSubsolarPoint, 'showSubsolarPoint'],
+  [showNightLights, 'showNightLights'],
+  [showSunInfo, 'showSunInfo'],
+  [useLocalTime, 'useLocalTime'],
+  [showGlobe, 'showGlobe'],
+  [showProjection, 'showProjection'],
+  [showOrrery, 'showOrrery'],
+  [showSundial, 'showSundial'],
+  [showSettingsPanel, 'showSettingsPanel'],
+];
+for (const [store, key] of syncedSettings) syncSetting(store as import('svelte/store').Writable<Settings[typeof key]>, key);
+
+// Settings with side effects — must remain explicit
 showEquatorTropics.subscribe((v) => {
   updateAndSave((s) => { s.showEquatorTropics = v; });
   if (!v) showEquatorTropicsLabels.set(false);
 });
-showEquatorTropicsLabels.subscribe((v) => updateAndSave((s) => { s.showEquatorTropicsLabels = v; }));
-
 showArcticCircles.subscribe((v) => {
   updateAndSave((s) => { s.showArcticCircles = v; });
   if (!v) showArcticCirclesLabels.set(false);
 });
-showArcticCirclesLabels.subscribe((v) => updateAndSave((s) => { s.showArcticCirclesLabels = v; }));
-
-showContinentLabels.subscribe((v) => updateAndSave((s) => { s.showContinentLabels = v; }));
-showOceanLabels.subscribe((v) => updateAndSave((s) => { s.showOceanLabels = v; }));
-showSubsolarPoint.subscribe((v) => updateAndSave((s) => { s.showSubsolarPoint = v; }));
-showNightLights.subscribe((v) => updateAndSave((s) => { s.showNightLights = v; }));
-showSunInfo.subscribe((v) => updateAndSave((s) => { s.showSunInfo = v; }));
-useLocalTime.subscribe((v) => updateAndSave((s) => { s.useLocalTime = v; }));
-showGlobe.subscribe((v) => updateAndSave((s) => { s.showGlobe = v; }));
-showProjection.subscribe((v) => updateAndSave((s) => { s.showProjection = v; }));
-showOrrery.subscribe((v) => updateAndSave((s) => { s.showOrrery = v; }));
-showSundial.subscribe((v) => updateAndSave((s) => { s.showSundial = v; }));
-showSettingsPanel.subscribe((v) => updateAndSave((s) => { s.showSettingsPanel = v; }));
 
 currentThemeId.subscribe((v) => {
   updateAndSave((s) => { s.themeId = v; });
