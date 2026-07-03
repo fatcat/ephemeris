@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "maxBadRequests": 3,
+  "findtimeSeconds": 600,
+  "banTimeSeconds": 86400
+}

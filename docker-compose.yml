@@ -7,4 +7,7 @@ services:
     volumes:
       - ./certs:/certs:ro
       - /var/log/ephemeris:/var/log/nginx
+      # Optional: tune scanner-ban thresholds / disable njs without a rebuild.
+      # Edit ./njs/ban-config.json on the host, then reload nginx.
+      - ./njs/ban-config.json:/etc/nginx/njs/ban-config.json:ro
     restart: unless-stopped

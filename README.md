@@ -152,6 +152,81 @@ No `ca.crt` is needed — browsers already trust Let's Encrypt. You will need to
 
 If you are behind a reverse proxy (e.g. Traefik, Caddy, or an institutional load balancer) that already terminates TLS, you can skip the certificate setup entirely and proxy directly to the container's HTTP port (8080).
 
+## Scanner protection
+
+Ephemeris ships with two layers of defense against internet vuln-scanners, the bots that probe for `/wp-admin`, `/.env`, `/phpmyadmin` and the like. They stack, and you can run either one on its own.
+
+- **njs (built in, on by default).** A small script inside nginx watches for known scanner paths. After a few hits from the same IP it blocks that IP on every path for a while. This runs inside the container, so a fresh `docker run` is already protected with no host setup.
+- **fail2ban (optional, host level).** Adds a durable kernel-level ban that drops a bad IP at the firewall before it ever reaches nginx. It survives container restarts and needs a little host setup.
+
+Running both is the recommended setup. njs responds instantly and works anywhere. fail2ban escalates to a firewall drop and remembers bans across restarts.
+
+### njs config
+
+Settings live in `njs/ban-config.json`:
+
+```json
+{
+  "enabled": true,
+  "maxBadRequests": 3,
+  "findtimeSeconds": 600,
+  "banTimeSeconds": 86400
+}
+```
+
+- `enabled`: set to `false` to turn njs banning off, for example if you would rather let fail2ban do all the banning. Scanner paths still get closed, njs just stops banning IPs.
+- `maxBadRequests`: how many scanner hits trigger a ban. Default 3.
+- `findtimeSeconds`: the window those hits must fall within. Default 600 (10 minutes).
+- `banTimeSeconds`: how long a ban lasts. Default 86400 (24 hours).
+
+The file is baked into the image with these defaults. To change values without rebuilding, `docker-compose.yml` bind-mounts it. Edit `./njs/ban-config.json` on the host and reload nginx:
+
+```bash
+docker compose exec ephemeris nginx -s reload
+```
+
+With plain `docker run`, add `-v ./njs/ban-config.json:/etc/nginx/njs/ban-config.json:ro` to tune it, or just rebuild after editing.
+
+Worth knowing:
+- njs bans at the HTTP layer. The connection is accepted and then rejected. fail2ban is the layer that drops traffic at the firewall.
+- njs ban state lives in memory. A container restart clears current njs bans. fail2ban bans persist.
+- Banning counts bad paths, not traffic volume. A classroom behind one shared IP never trips it, because real users never request scanner paths.
+- njs bans by the client IP nginx sees. Read the real client IP note below.
+
+### fail2ban setup
+
+The `fail2ban/` folder has everything needed. It bans a scanner IP at the host firewall after 3 bad requests in 10 minutes, for 24 hours.
+
+```bash
+cd fail2ban
+sudo ./setup.sh install     # install configs, start the jail, arm a safety timer
+sudo ./setup.sh status      # show current bans
+sudo ./setup.sh rollback    # undo everything
+```
+
+`setup.sh install` arms a dead man's switch. If you get locked out it auto-undoes the setup after 30 minutes. Once you confirm you still have access, cancel it:
+
+```bash
+sudo ./setup.sh cancel-deadman
+```
+
+Requirements:
+- `fail2ban`, `nftables`, and `at` installed on the host.
+- An existing nftables `inet firewall` table with a `fail2ban` set. The action adds banned IPs to it, and the firewall checks it for both direct and container-forwarded traffic so Docker-proxied requests are dropped too.
+- The host log dir `/var/log/ephemeris` must be writable by the container's nginx user. The container writes its access log there and fail2ban reads it. If ownership is wrong, nginx cannot write the log, the log stays empty, and nothing ever bans. Chown it to the nginx uid (usually 101) and use `copytruncate` in logrotate so rotation does not cut the log feed.
+
+### Real client IP (matters for both layers)
+
+Both njs and fail2ban ban the IP that nginx sees as the client. If the container runs behind Docker's default NAT with userland-proxy on, nginx can see the bridge gateway (something like `172.17.0.1`) for every request. Then a ban either targets the gateway and blocks everyone, or never lands on a real attacker.
+
+Check what nginx actually logs:
+
+```bash
+awk '{print $1}' /var/log/ephemeris/access.log | sort | uniq -c | sort -rn | head
+```
+
+Real public IPs mean you are set. One `172.x` address for everything means you must fix this before relying on either ban layer. Set `userland-proxy: false` in the Docker daemon config, or use host networking. If a reverse proxy sits in front, forward the real client IP and configure nginx `real_ip` so `$remote_addr` is the true client.
+
 
 # Development
 
@@ -175,7 +250,7 @@ npm run lint         # eslint
 The Dockerfile uses a two-stage build:
 
 1. **Build stage** (`node:22-alpine`) — installs npm dependencies from `package-lock.json` and runs `npm run build` to produce static files in `dist/`
-2. **Serve stage** (`nginx:alpine`) — serves the static output over HTTPS with TLS 1.2+, security headers, gzip compression, SPA fallback routing, and aggressive caching for Vite-hashed assets. Runs as the unprivileged `nginx` user (no root)
+2. **Serve stage** (`nginx:alpine`) — serves the static output over HTTPS with TLS 1.2+, security headers, gzip compression, SPA fallback routing, and aggressive caching for Vite-hashed assets. Runs as the unprivileged `nginx` user (no root). Includes the njs module, which powers the built-in scanner banner (see [Scanner protection](#scanner-protection))
 
 Final image size is ~63 MB.
 

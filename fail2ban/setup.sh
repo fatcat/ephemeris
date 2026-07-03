@@ -2,15 +2,16 @@
 # fail2ban setup for ephemeris vuln scanner auto-ban
 # Must be run as root on the Docker host
 #
-# Integrates with the nftables firewall (inet firewall table).
-# Banned IPs are added to the "fail2ban" set, which is checked in both
-# the input and forward chains — silencing all traffic including ICMP
-# and Docker-forwarded requests.
+# Uses the ephemeris-docker-drop action, which inserts DROP rules into the
+# iptables DOCKER-USER chain (and INPUT). Docker evaluates DOCKER-USER before
+# its own NAT/forward rules, so a banned IP is dropped before it reaches the
+# container. On an nftables host the iptables commands go through iptables-nft,
+# so these rules show up under `table ip filter` in `nft list ruleset`.
 #
 # Usage:
 #   sudo ./setup.sh install     # install and start fail2ban with dead man's switch
-#   sudo ./setup.sh rollback    # undo everything: flush set, stop fail2ban, remove configs
-#   sudo ./setup.sh status      # show current bans and nftables set contents
+#   sudo ./setup.sh rollback    # undo everything: stop fail2ban, remove configs
+#   sudo ./setup.sh status      # show current bans (DOCKER-USER + INPUT drops)
 
 set -euo pipefail
 
@@ -21,7 +22,7 @@ ACTION_SRC="$SCRIPT_DIR/action.conf"
 
 FILTER_DST="/etc/fail2ban/filter.d/ephemeris-scanner.conf"
 JAIL_DST="/etc/fail2ban/jail.d/ephemeris.conf"
-ACTION_DST="/etc/fail2ban/action.d/ephemeris-nft-drop.conf"
+ACTION_DST="/etc/fail2ban/action.d/ephemeris-docker-drop.conf"
 
 LOG_DIR="/var/log/ephemeris"
 
@@ -57,10 +58,10 @@ rollback() {
         info "Stopped ephemeris-scanner jail"
     fi
 
-    # Flush the fail2ban set in nftables (best-effort)
-    info "Flushing nftables fail2ban set..."
-    nft flush set inet firewall fail2ban 2>/dev/null || true
-    info "nftables fail2ban set flushed"
+    # Stopping the jail above triggers fail2ban's actionunban for every active
+    # ban, which removes its DOCKER-USER and INPUT DROP rules. (The old nftables
+    # set flush is not needed with the docker-drop action.)
+    info "Jail stop unbans all IPs (removes DOCKER-USER/INPUT DROP rules)"
 
     # Remove config files
     for f in "$FILTER_DST" "$JAIL_DST" "$ACTION_DST"; do
@@ -108,25 +109,27 @@ install() {
     info "Installing fail2ban for ephemeris scanner detection..."
 
     # Check dependencies
-    for cmd in fail2ban-client nft at; do
+    for cmd in fail2ban-client iptables at; do
         if ! command -v "$cmd" &>/dev/null; then
             error "'$cmd' not found. Install it first:"
             case "$cmd" in
                 fail2ban-client) echo "  apt install fail2ban   (Debian/Ubuntu)" ;;
-                nft)             echo "  apt install nftables   (Debian/Ubuntu)" ;;
+                iptables)        echo "  apt install iptables   (Debian/Ubuntu)" ;;
                 at)              echo "  apt install at         (Debian/Ubuntu)" ;;
             esac
             exit 1
         fi
     done
 
-    # Verify the nftables firewall table and fail2ban set exist
-    if ! nft list set inet firewall fail2ban &>/dev/null; then
-        error "nftables set 'inet firewall fail2ban' not found."
-        error "Run the nftables.sh firewall script first to create the table and sets."
+    # Verify Docker's DOCKER-USER chain exists. The docker-drop action inserts
+    # DROP rules there, and Docker evaluates it before its NAT/forward rules.
+    # Docker creates this chain automatically when it starts with iptables.
+    if ! iptables -n -L DOCKER-USER &>/dev/null; then
+        error "iptables chain 'DOCKER-USER' not found."
+        error "Is Docker running? It creates DOCKER-USER on startup. Start Docker, then retry."
         exit 1
     fi
-    info "Verified nftables fail2ban set exists"
+    info "Verified DOCKER-USER chain exists"
 
     # Ensure atd is running (needed for dead man's switch)
     if ! systemctl is-active --quiet atd 2>/dev/null; then
@@ -215,8 +218,9 @@ status() {
     fail2ban-client status ephemeris-scanner 2>/dev/null || warn "Jail not running"
 
     echo ""
-    info "=== nftables fail2ban set (banned IPs) ==="
-    nft list set inet firewall fail2ban 2>/dev/null || echo "  (set not found — run nftables.sh first)"
+    info "=== banned IPs (DOCKER-USER + INPUT DROP rules) ==="
+    iptables -n -L DOCKER-USER 2>/dev/null | grep DROP || echo "  (no DOCKER-USER drops)"
+    iptables -n -L INPUT 2>/dev/null | grep DROP || echo "  (no INPUT drops)"
 
     echo ""
     info "=== Dead man's switch ==="
@@ -259,8 +263,8 @@ case "${1:-}" in
         echo "Usage: $0 {install|rollback|status|cancel-deadman}"
         echo ""
         echo "  install        Install fail2ban configs and start jail (with dead man's switch)"
-        echo "  rollback       Stop jail, flush nftables fail2ban set, remove configs"
-        echo "  status         Show current bans, nftables set contents, and dead man's switch state"
+        echo "  rollback       Stop jail (unbans all IPs), remove configs"
+        echo "  status         Show current bans (DOCKER-USER + INPUT drops) and dead man's switch state"
         echo "  cancel-deadman Cancel the auto-rollback at job (keep fail2ban running)"
         echo ""
         echo "Environment:"

@@ -454,3 +454,81 @@ The code looks good. Both utility files are clean, correct, and well-documented.
 No issues found.
 
 ---
+### 2026-04-11 17:41:40 (3c6d853) — package.json, src/App.svelte, src/lib/components/Globe.svelte, src/lib/components/Orrery.svelte, src/lib/components/Sundial.svelte, src/lib/stores/settings.ts, src/lib/three/geoOverlays.ts, src/lib/three/gridLines.ts, src/lib/three/orreryScene.ts, src/lib/three/polePins.ts, src/lib/three/projectionScene.ts, src/lib/three/scene.ts, src/lib/three/sundialScene.ts
+
+**[LOW] `Globe.svelte` — spurious animated camera call on mount**
+
+Because `globeControls` is declared as `let globeControls: GlobeControls | null = $state(null)` (line 41), Svelte's `$effect` tracks it as a reactive dependency:
+
+```js
+$effect(() => {
+  globeControls?.setCameraLatitude(camLat);  // also re-fires when globeControls is assigned
+});
+```
+
+Lifecycle on mount:
+1. `$effect` runs — `globeControls` is `null`, `?.` short-circuits. No-op.
+2. `onMount` creates the scene, assigns `globeControls = ...`, then calls `globeControls.setCameraLatitude(camLat, true)` (instant snap).
+3. Because `globeControls` changed, the `$effect` is scheduled to re-run → fires `globeControls.setCameraLatitude(camLat)` *without* `instant=true`.
+
+Step 3 calls `setCameraLatitude` unconditionally: it sets `latFrom = camLatRad`, `latTarget = target`, `latStart = performance.now()` (controls.ts lines 181–183). Since `latFrom === latTarget` (zero-distance), the camera stays at the correct position throughout the animation. However the animation tick runs unnecessarily until `t ≥ 1`, and the "instant" intent in the comment is violated — during that window `latTarget !== null` so the controls update loop treats a latitude animation as active.
+
+Low severity because no visual artifact results, but the fix is straightforward: make `globeControls` a plain `let` (not `$state`) since it's only mutated once and nothing else needs to react to it, or use `$effect.pre` / guard with a mounted flag.
+
+---
+
+Everything else in the diff looks solid:
+- The `$derived($store)` migration in `App.svelte` correctly fixes the previously-flagged subscription leaks.
+- The `syncSetting` refactor in `settings.ts` is clean; `showEquatorTropics`/`showArcticCircles` side-effects are correctly preserved in the explicit subscribers.
+- The `polePins.ts` split into `northGeo`/`southGeo` correctly eliminates shared-geometry double-dispose.
+- Removing the duplicate `sunriseSunset()` call in `Sundial.svelte` is a clean fix.
+- The `projectionScene.ts` `.material.dispose()` calls are safe — `createSunMarker`/`createLocationMarker` return `Sprite`, whose `.material` is typed as `SpriteMaterial` (not `Material | Material[]`).
+
+---
+
+## 2026-07-03 — Security hardening pass (request servicing & input handling)
+
+Ran the security-focused review pipeline: static hotspots (code-quality + software-architect)
++ live pentest (api-security-tester + injection-logic-tester) against a throwaway container.
+App is unauthenticated by design. Scope: serving layer + client input handling.
+
+**App input handling — CLEAN (empirically confirmed):**
+- XSS via `location.name` / `recentLocations[].name`: REFUTED. 5 payloads × 2 sinks, all
+  render as inert escaped text (Svelte auto-escaping). No `{@html}`/`innerHTML` anywhere.
+- Prototype pollution via `{...defaults, ...parsed}` (settings.ts:85): REFUTED. Spread makes
+  `__proto__` an own prop; `Object.prototype` untouched.
+- No traversal, TLS 1.2/1.3 hardened, methods 405 (no TRACE reflection), no info leakage,
+  `/ca.crt` exact-match alias exposes no adjacent keys.
+
+**Findings & dispositions:**
+| # | Finding | Sev | Disposition |
+|---|---|---|---|
+| 1 | fail2ban may ban Docker gateway IP not real client | High | RESOLVED in prod (log shows real public IPs). njs shares this dep — documented in README (real-client-IP section). |
+| 2 | fail2ban forward-chain enforcement fragile (nft-drop) | High | RESOLVED in prod via `DOCKER-USER` action. njs dissolves it (HTTP-layer ban, no firewall dep). |
+| 3 | nginx `add_header` non-inheritance drops HSTS/Permissions-Policy/Referrer-Policy on `/assets/` + `/sw.js` | Med | ~~FIXED~~ — hoisted to `snippets/security-headers.conf`, included in server + each location. Verified full header set on all paths. |
+| 4 | Log bind-mount ownership/rotation can silently kill fail2ban feed | Med | Documented (README: chown to nginx uid + copytruncate). njs unaffected (no log dep). |
+| 5 | `loadSettings()` no type validation → NaN into WebGL (self-DoS) | Low | DEFERRED — self-inflicted only (own localStorage), degrades gracefully, not a security vuln. |
+| 6 | `recentLocations` uncapped on load | Low | DEFERRED — self-inflicted only. |
+| 7 | CSP missing base-uri/object-src/form-action | Low | ~~FIXED~~ — added `base-uri 'none'; object-src 'none'; form-action 'self'`. Verified on wire. |
+| 8 | `ca.key` mounted into serving container | Low | DEFERRED — not reachable over HTTP (confirmed); least-privilege nit for later. |
+| 9 | `$host` open-redirect on HTTP→HTTPS 301 | Low | DOCUMENTED not code-fixed — a hardcoded host breaks per-host self-signed deploys. nginx.conf comments + README note the `server_name` hardening. |
+
+**New scanner defense (this pass):** added in-image njs banner (`njs/ban.js` +
+`njs/ban-config.json`): counts bad-path hits per IP in a shared dict, bans after 3 in 10 min
+for 24h, blocks banned IPs on all paths via `auth_request`. On by default, tunable, disable
+toggle. Verified: ban-after-3, block-all-paths, classroom-volume safe (60 legit reqs never
+banned), disable toggle. njs is the portable in-image layer; fail2ban stays as the durable
+kernel layer. Bonus: scanner paths now return 444 (was 200 SPA-fallback), so fail2ban catches
+HTTPS probes too, not just port-80 301s.
+
+**Part B DONE:** reconciled repo fail2ban to production. `action.conf` now holds the real
+`ephemeris-docker-drop` action (iptables DROP into DOCKER-USER + INPUT), `jail.conf` points at
+`ephemeris-docker-drop[chain="DOCKER-USER"]`, and `setup.sh` migrated off the native-nft model
+(DOCKER-USER/iptables prerequisite + rollback + status instead of the `inet firewall` set).
+Confirmed against the user's live `nft list ruleset`: DOCKER-USER is jumped first in FORWARD
+(policy drop) and a real banned IP shows an active DROP with a non-zero packet counter, so
+Findings #1 and #2 are verified enforcing in production. setup.sh syntax-checked (bash -n);
+not run live (needs a root Docker host with fail2ban + at).
+
+---
+
