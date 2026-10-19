@@ -43,6 +43,7 @@ interface Settings {
   showProjection: boolean;
   showOrrery: boolean;
   showSundial: boolean;
+  showSkydome: boolean;
   showSettingsPanel: boolean;
   location: UserLocation;
   recentLocations: UserLocation[];
@@ -68,6 +69,7 @@ const defaults: Settings = {
   showProjection: true,
   showOrrery: false,
   showSundial: false,
+  showSkydome: false,
   showSettingsPanel: true,
   location: { name: '', lat: 0, lon: 0 },
   recentLocations: [],
@@ -173,6 +175,7 @@ export const showGlobe = writable<boolean>(initial.showGlobe);
 export const showProjection = writable<boolean>(initial.showProjection);
 export const showOrrery = writable<boolean>(initial.showOrrery);
 export const showSundial = writable<boolean>(initial.showSundial);
+export const showSkydome = writable<boolean>(initial.showSkydome);
 export const showSettingsPanel = writable<boolean>(initial.showSettingsPanel);
 export const userLocation = writable<UserLocation>(initial.location);
 export const recentLocations = writable<UserLocation[]>(initial.recentLocations);
@@ -202,6 +205,7 @@ const syncedSettings: [import('svelte/store').Writable<unknown>, keyof Settings]
   [showProjection, 'showProjection'],
   [showOrrery, 'showOrrery'],
   [showSundial, 'showSundial'],
+  [showSkydome, 'showSkydome'],
   [showSettingsPanel, 'showSettingsPanel'],
 ];
 for (const [store, key] of syncedSettings) syncSetting(store as import('svelte/store').Writable<Settings[typeof key]>, key);

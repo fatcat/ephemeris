@@ -99,45 +99,18 @@
 </script>
 
 <div
-  class="sundial-container"
+  class="scene-host"
   bind:this={container}
   role="application"
   aria-label="Sundial view"
 >
   {#if lowLatWarning}
-    <span class="low-lat-warning">
+    <span class="view-note">
       Horizontal sundials are impractical at this latitude
     </span>
   {/if}
 </div>
 
 <style>
-  .sundial-container {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-    overflow: hidden;
-  }
 
-  .sundial-container :global(canvas) {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  .low-lat-warning {
-    position: absolute;
-    top: 0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.75rem;
-    font-style: normal;
-    color: rgba(198, 198, 198, 0.7);
-    pointer-events: none;
-    z-index: 1;
-    white-space: nowrap;
-    text-shadow:
-      0 0 4px rgba(0, 0, 0, 1),
-      0 0 8px rgba(0, 0, 0, 0.9);
-  }
 </style>

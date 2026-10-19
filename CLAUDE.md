@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **All phases complete.** The project is finished.
+> **All phases complete** (Phase 8, Sky Dome view, added 2026-10-19).
 >
 > See `docs/phases/README.md` for overall phase status.
 

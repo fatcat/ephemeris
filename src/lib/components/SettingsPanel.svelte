@@ -9,28 +9,35 @@
   import { get } from 'svelte/store';
   import {
     hardTerminator,
-    showGlobe,
-    showProjection,
-    showOrrery,
-    showSundial,
     cameraLatitude,
     userLocation,
   } from '../stores/settings.js';
+  import { VIEWS, MAX_ACTIVE_VIEWS, activeViewIds, type ViewDef } from '../views.js';
 
   let gearOpen = $state(false);
   let aboutOpen = $state(false);
   let gearBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
   let aboutBtnEl: HTMLButtonElement = $state(undefined as unknown as HTMLButtonElement);
 
-  /** Toggle a view store, but prevent turning off the last active view. */
-  function toggleView(store: typeof showGlobe) {
-    const current = get(store);
-    if (current) {
-      // Don't allow turning off if it's the only one on
-      const activeCount = (+get(showGlobe)) + (+get(showProjection)) + (+get(showOrrery)) + (+get(showSundial));
-      if (activeCount <= 1) return;
+  let viewLimitNotice = $state(false);
+  let viewLimitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Toggle a view, but never turn off the last active view, and refuse to
+   * turn on more views than the layout supports.
+   */
+  function toggleView(view: ViewDef) {
+    const on = get(view.store);
+    const activeCount = get(activeViewIds).length;
+    if (on && activeCount <= 1) return;
+    if (!on && activeCount >= MAX_ACTIVE_VIEWS) {
+      viewLimitNotice = true;
+      clearTimeout(viewLimitTimer);
+      viewLimitTimer = setTimeout(() => (viewLimitNotice = false), 4000);
+      return;
     }
-    store.set(!current);
+    viewLimitNotice = false;
+    view.store.set(!on);
   }
 </script>
 
@@ -93,43 +100,23 @@
     <div class="labeled-group">
       <span class="group-label">Views</span>
       <div class="view-toggle" role="group" aria-label="Toggle views">
-        <button
-          class="btn btn-vt"
-          class:active={$showGlobe}
-          onclick={() => toggleView(showGlobe)}
-          aria-label="Toggle globe view"
-          aria-pressed={$showGlobe}
-        >
-          Globe
-        </button>
-        <button
-          class="btn btn-vt"
-          class:active={$showProjection}
-          onclick={() => toggleView(showProjection)}
-          aria-label="Toggle projection view"
-          aria-pressed={$showProjection}
-        >
-          Proj
-        </button>
-        <button
-          class="btn btn-vt"
-          class:active={$showOrrery}
-          onclick={() => toggleView(showOrrery)}
-          aria-label="Toggle orrery view"
-          aria-pressed={$showOrrery}
-        >
-          Orrery
-        </button>
-        <button
-          class="btn btn-vt"
-          class:active={$showSundial}
-          onclick={() => toggleView(showSundial)}
-          aria-label="Toggle sundial view"
-          aria-pressed={$showSundial}
-        >
-          Dial
-        </button>
+        {#each VIEWS as view (view.id)}
+          <button
+            class="btn btn-vt"
+            class:active={$activeViewIds.includes(view.id)}
+            onclick={() => toggleView(view)}
+            aria-label="Toggle {view.name} view"
+            aria-pressed={$activeViewIds.includes(view.id)}
+          >
+            {view.label}
+          </button>
+        {/each}
       </div>
+      <span class="view-limit-notice" role="status" aria-live="polite">
+        {#if viewLimitNotice}
+          Up to {MAX_ACTIVE_VIEWS} views at once. Turn one off first.
+        {/if}
+      </span>
     </div>
     <div class="labeled-group">
       <span class="group-label">Terminator</span>
@@ -290,6 +277,7 @@
 
   .view-terminator-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 0.5rem;
   }
@@ -305,6 +293,12 @@
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+
+  .view-limit-notice {
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    min-height: 0;
   }
 
   .view-toggle,

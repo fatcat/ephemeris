@@ -282,7 +282,7 @@
   });
 </script>
 
-<div class="globe-container" bind:this={container} onpointerdown={onGlobePointerDown} onpointerup={onGlobePointerUp} role="application" aria-label="Interactive globe — click to set location">
+<div class="scene-host" bind:this={container} onpointerdown={onGlobePointerDown} onpointerup={onGlobePointerUp} role="application" aria-label="Interactive globe — click to set location">
   <div class="globe-labels">
     {#each labelPositions as lp (lp.label.name)}
       {#if lp.visible}
@@ -309,18 +309,7 @@
 </div>
 
 <style>
-  .globe-container {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-    overflow: hidden;
-  }
 
-  .globe-container :global(canvas) {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
 
   .globe-labels {
     position: absolute;

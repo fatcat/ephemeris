@@ -28,6 +28,7 @@ When a phase is complete, update the status below and in CLAUDE.md.
 | 5 | [Geography & Labels](phase-5.md) | Complete | Continental outlines, labels, rivers, terrain styling |
 | 6 | [Location, Sun Data & Night Lights](phase-6.md) | Complete | Location input, sun info panel, night lights texture |
 | 7 | [Polish, Performance & PWA](phase-7.md) | Complete | UI styling, mobile, performance, full PWA, accessibility |
+| 8 | [Sky Dome View](phase-8.md) | Complete | Sun paths across the local sky; view registry; 4-view limit |
 
 ## Phase Dependencies
 

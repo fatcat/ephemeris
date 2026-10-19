@@ -28,7 +28,8 @@ import {
   LatheGeometry,
   PCFSoftShadowMap,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createConstrainedOrbit, createTextTexture } from './sceneHelpers.js';
+import { horizonToScenePosition } from '../utils/geo.js';
 
 // ── Constants ──
 
@@ -121,23 +122,6 @@ export interface SundialScene {
   dispose: () => void;
 }
 
-/** Create a canvas texture with a Roman numeral label. */
-function createLabelTexture(text: string): CanvasTexture {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  ctx.clearRect(0, 0, size, size);
-  ctx.fillStyle = LABEL_COLOR;
-  ctx.font = 'bold 56px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, size / 2, size / 2);
-  const tex = new CanvasTexture(canvas);
-  return tex;
-}
-
 /**
  * Compute hour line angle on the dial face.
  * For a horizontal sundial: tan(θ) = sin(latitude) × tan(15° × h)
@@ -166,21 +150,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
   container.appendChild(renderer.domElement);
 
   // ── Orbit controls (limited: ±10% zoom, ±10° polar, ±15° azimuth) ──
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.22
-  controls.enablePan = false;
-  const INIT_DIST = camera.position.length();
-  controls.minDistance = INIT_DIST * 0.9;
-  controls.maxDistance = INIT_DIST * 1.1;
-  const INIT_POLAR = Math.acos(camera.position.y / INIT_DIST);
-  const POLAR_MARGIN = 10 * (Math.PI / 180);
-  controls.minPolarAngle = INIT_POLAR - POLAR_MARGIN;
-  controls.maxPolarAngle = INIT_POLAR + POLAR_MARGIN;
-  const INIT_AZ = Math.atan2(camera.position.x, camera.position.z);
-  const AZ_MARGIN = 15 * (Math.PI / 180);
-  controls.minAzimuthAngle = INIT_AZ - AZ_MARGIN;
-  controls.maxAzimuthAngle = INIT_AZ + AZ_MARGIN;
+  const { controls, aim } = createConstrainedOrbit(camera, renderer.domElement);
 
   // ── Lights ──
   const sunLight = new DirectionalLight(0xfff5e0, 2.0);
@@ -330,7 +300,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
       if (!label) continue;
 
       const angle = hourLineAngle(latRad, h);
-      const tex = createLabelTexture(label);
+      const tex = createTextTexture(label, { color: LABEL_COLOR });
       dynamicTextures.push(tex);
 
       const labelGeo = new PlaneGeometry(2.0, 2.0);
@@ -401,23 +371,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
       builtKey = newKey;
 
       // Update camera for hemisphere (slight X offset so gnomon blade is visible)
-      if (southernHemi) {
-        camera.position.set(-5, 23, -22);
-      } else {
-        camera.position.set(5, 23, 22);
-      }
-      camera.lookAt(0, 0, 0);
-      controls.target.set(0, 0, 0);
-      const newDist = camera.position.length();
-      controls.minDistance = newDist * 0.9;
-      controls.maxDistance = newDist * 1.1;
-      const newPolar = Math.acos(camera.position.y / newDist);
-      controls.minPolarAngle = newPolar - POLAR_MARGIN;
-      controls.maxPolarAngle = newPolar + POLAR_MARGIN;
-      const newAz = Math.atan2(camera.position.x, camera.position.z);
-      controls.minAzimuthAngle = newAz - AZ_MARGIN;
-      controls.maxAzimuthAngle = newAz + AZ_MARGIN;
-      controls.update();
+      aim(southernHemi ? [-5, 23, -22] : [5, 23, 22]);
     }
 
     // ── Sun light position from elevation/azimuth ──
@@ -428,13 +382,7 @@ export function createSundialScene(container: HTMLElement): SundialScene {
     ambientLight.intensity = 1.8 - t * 1.6;  // 1.8 (low) → 0.2 (high sun)
     ambientLight.color.setHex(0x404060);
 
-    const elRad = elevationDeg * (Math.PI / 180);
-    const azRad = azimuthDeg * (Math.PI / 180);
-    const dist = 50;
-    const lx = dist * Math.cos(elRad) * Math.sin(azRad);
-    const ly = dist * Math.sin(elRad);
-    const lz = -dist * Math.cos(elRad) * Math.cos(azRad);
-    sunLight.position.set(lx, ly, lz);
+    sunLight.position.set(...horizonToScenePosition(azimuthDeg, elevationDeg, 50));
     sunLight.target.position.set(0, 0, 0);
     sunLight.target.updateMatrixWorld();
 

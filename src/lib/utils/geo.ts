@@ -51,3 +51,24 @@ export function lonToPercent(lon: number): number {
 export function latToPercent(lat: number): number {
   return (1 - (0.5 + lat / 180)) * 100;
 }
+
+/**
+ * Convert local horizon coordinates (azimuth clockwise from north, elevation
+ * above the horizon) to a scene position around an observer at the origin.
+ *
+ * Scene convention shared by the sundial and sky dome: +Y up, north = -Z,
+ * east = +X, south = +Z.
+ */
+export function horizonToScenePosition(
+  azimuthDeg: number,
+  elevationDeg: number,
+  r: number,
+): [number, number, number] {
+  const az = azimuthDeg * DEG_TO_RAD;
+  const el = elevationDeg * DEG_TO_RAD;
+  return [
+    r * Math.cos(el) * Math.sin(az),
+    r * Math.sin(el),
+    -r * Math.cos(el) * Math.cos(az),
+  ];
+}

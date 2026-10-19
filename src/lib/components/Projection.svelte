@@ -208,7 +208,7 @@
 </script>
 
 <div
-  class="projection-container"
+  class="scene-host projection-container"
   bind:this={container}
   onpointerdown={onProjPointerDown}
   onpointerup={onProjPointerUp}
@@ -257,10 +257,6 @@
 
 <style>
   .projection-container {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-    overflow: hidden;
     container-type: size;
     cursor: crosshair;
   }

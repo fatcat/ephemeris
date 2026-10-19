@@ -5,11 +5,13 @@
   import Projection from './lib/components/Projection.svelte';
   import Orrery from './lib/components/Orrery.svelte';
   import Sundial from './lib/components/Sundial.svelte';
+  import Skydome from './lib/components/Skydome.svelte';
   import SettingsPanel from './lib/components/SettingsPanel.svelte';
   import SunInfo from './lib/components/SunInfo.svelte';
   import { loadEarthTexture, loadNightTexture } from './lib/three/scene.js';
   import { tick, playbackMode, isPlaying, playbackSpeed } from './lib/stores/time.js';
-  import { showGlobe, showProjection, showOrrery, showSundial, showSunInfo, showSettingsPanel } from './lib/stores/settings.js';
+  import { showSunInfo, showSettingsPanel } from './lib/stores/settings.js';
+  import { activeViewIds } from './lib/views.js';
 
   let sharedTexture: Texture | null = $state(null);
   let nightTexture: Texture | null = $state(null);
@@ -18,23 +20,11 @@
   let lastFrameTime = 0;
   let errorMessage: string | null = $state(null);
 
-  let globeVisible = $derived($showGlobe);
-  let projVisible = $derived($showProjection);
-  let orreryVisible = $derived($showOrrery);
-  let sundialVisible = $derived($showSundial);
   let sunInfoVisible = $derived($showSunInfo);
   let panelVisible = $derived($showSettingsPanel);
 
-  // Canonical order of views (used to determine which are active)
-  let activeViews = $derived(
-    (['globe', 'projection', 'orrery', 'sundial'] as const).filter(
-      (v) =>
-        v === 'globe' ? globeVisible :
-        v === 'projection' ? projVisible :
-        v === 'orrery' ? orreryVisible :
-        sundialVisible,
-    ),
-  );
+  // Active views in canonical order (see VIEWS in lib/views.ts)
+  let activeViews = $derived($activeViewIds);
 
   // Display order — a permutation of activeViews.
   // Preserved across add/remove; mutated by promotion (3-view).
@@ -167,6 +157,8 @@
     <Orrery sharedTexture={sharedTexture!} nightTexture={nightTexture!} />
   {:else if view === 'sundial'}
     <Sundial />
+  {:else if view === 'skydome'}
+    <Skydome />
   {/if}
 {/snippet}
 

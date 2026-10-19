@@ -36,7 +36,7 @@
     <p class="about-desc">
       An educational web app for understanding why Earth has seasons. Visualizes
       the day/night terminator on a 3D globe and equirectangular projection. Also
-      shows an orrery view and sundial. Driven by real solar position calculations.
+      shows an orrery, a sundial and a sky dome tracing the sun's path. Driven by real solar position calculations.
     </p>
     <p class="about-desc">
       Designed for instructor-led use with students ages 8+.

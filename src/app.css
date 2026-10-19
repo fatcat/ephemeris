@@ -52,3 +52,33 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Short note centered at the top of a 3D view (e.g. "sun is below the horizon") */
+.view-note {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: rgba(198, 198, 198, 0.7);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 1),
+    0 0 8px rgba(0, 0, 0, 0.9);
+}
+
+/* Container a Three.js view mounts its canvas into */
+.scene-host {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.scene-host > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
