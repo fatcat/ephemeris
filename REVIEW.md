@@ -507,8 +507,8 @@ App is unauthenticated by design. Scope: serving layer + client input handling.
 | 2 | fail2ban forward-chain enforcement fragile (nft-drop) | High | RESOLVED in prod via `DOCKER-USER` action. njs dissolves it (HTTP-layer ban, no firewall dep). |
 | 3 | nginx `add_header` non-inheritance drops HSTS/Permissions-Policy/Referrer-Policy on `/assets/` + `/sw.js` | Med | ~~FIXED~~ — hoisted to `snippets/security-headers.conf`, included in server + each location. Verified full header set on all paths. |
 | 4 | Log bind-mount ownership/rotation can silently kill fail2ban feed | Med | Documented (README: chown to nginx uid + copytruncate). njs unaffected (no log dep). |
-| 5 | `loadSettings()` no type validation → NaN into WebGL (self-DoS) | Low | DEFERRED — self-inflicted only (own localStorage), degrades gracefully, not a security vuln. |
-| 6 | `recentLocations` uncapped on load | Low | DEFERRED — self-inflicted only. |
+| 5 | `loadSettings()` no type validation → NaN into WebGL (self-DoS) | Low | ~~FIXED~~ (2026-10-19): `sanitizeSettings()` type- and range-checks every field, falls back to defaults. Verified with corrupt localStorage in browser. |
+| 6 | `recentLocations` uncapped on load | Low | ~~FIXED~~ (2026-10-19): invalid entries filtered, list capped at `MAX_RECENT_LOCATIONS` on load. Verified (500 entries in, 3 out). |
 | 7 | CSP missing base-uri/object-src/form-action | Low | ~~FIXED~~ — added `base-uri 'none'; object-src 'none'; form-action 'self'`. Verified on wire. |
 | 8 | `ca.key` mounted into serving container | Low | DEFERRED — not reachable over HTTP (confirmed); least-privilege nit for later. |
 | 9 | `$host` open-redirect on HTTP→HTTPS 301 | Low | DOCUMENTED not code-fixed — a hardcoded host breaks per-host self-signed deploys. nginx.conf comments + README note the `server_name` hardening. |

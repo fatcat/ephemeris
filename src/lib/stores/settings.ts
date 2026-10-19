@@ -19,6 +19,10 @@ const MAX_RECENT_LOCATIONS = 3;
 /** Earth's real axial tilt in degrees */
 export const REAL_AXIAL_TILT = 23.44;
 
+/** Axial tilt slider bounds in degrees */
+export const MIN_AXIAL_TILT = 0;
+export const MAX_AXIAL_TILT = 90;
+
 interface Settings {
   themeId: string;
   axialTilt: number;
@@ -69,6 +73,44 @@ const defaults: Settings = {
   recentLocations: [],
 };
 
+function isFiniteInRange(v: unknown, min: number, max: number): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+}
+
+function isValidLocation(v: unknown): v is UserLocation {
+  if (typeof v !== 'object' || v === null) return false;
+  const loc = v as Record<string, unknown>;
+  return (
+    typeof loc.name === 'string' &&
+    isFiniteInRange(loc.lat, -90, 90) &&
+    isFiniteInRange(loc.lon, -180, 180)
+  );
+}
+
+/**
+ * Build Settings from untrusted parsed JSON. Any field with the wrong type or
+ * an out-of-range value falls back to its default, so a hand-edited or corrupt
+ * localStorage entry can't push NaN or garbage into the renderers.
+ */
+function sanitizeSettings(parsed: unknown): Settings {
+  if (typeof parsed !== 'object' || parsed === null) return { ...defaults };
+  const p = parsed as Record<string, unknown>;
+  const out: Settings = { ...defaults };
+
+  for (const key of Object.keys(defaults) as (keyof Settings)[]) {
+    if (typeof defaults[key] === 'boolean' && typeof p[key] === 'boolean') {
+      (out as unknown as Record<string, unknown>)[key] = p[key];
+    }
+  }
+  if (typeof p.themeId === 'string') out.themeId = p.themeId;
+  if (isFiniteInRange(p.axialTilt, MIN_AXIAL_TILT, MAX_AXIAL_TILT)) out.axialTilt = p.axialTilt;
+  if (isValidLocation(p.location)) out.location = p.location;
+  if (Array.isArray(p.recentLocations)) {
+    out.recentLocations = p.recentLocations.filter(isValidLocation).slice(0, MAX_RECENT_LOCATIONS);
+  }
+  return out;
+}
+
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -82,7 +124,7 @@ function loadSettings(): Settings {
         parsed.showOrrery = false;
         delete parsed.viewMode;
       }
-      return { ...defaults, ...parsed };
+      return sanitizeSettings(parsed);
     }
   } catch {
     // ignore

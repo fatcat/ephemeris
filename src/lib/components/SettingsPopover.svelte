@@ -15,6 +15,8 @@
     useLocalTime,
     axialTilt,
     REAL_AXIAL_TILT,
+    MIN_AXIAL_TILT,
+    MAX_AXIAL_TILT,
     currentThemeId,
   } from '../stores/settings.js';
   import { THEMES } from '../themes.js';
@@ -254,8 +256,8 @@
         <input
           type="range"
           class="tilt-slider"
-          min="0"
-          max="90"
+          min={MIN_AXIAL_TILT}
+          max={MAX_AXIAL_TILT}
           step="0.5"
           value={$axialTilt}
           oninput={(e) =>
