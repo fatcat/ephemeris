@@ -6,6 +6,11 @@ import { landPathData } from './src/ha-card/geo/landPath.js';
 const LAND_ID = 'virtual:ephemeris-land';
 const LAND_SOURCE = new URL('./src/assets/geo/land.json', import.meta.url);
 
+// Cards are versioned apart from the app. Only release builds carry the bare number,
+// so a copied-in test build can't pass for a release in the browser console.
+const { cardVersion } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+const CARD_VERSION = process.env.EPHEMERIS_CARD_RELEASE === '1' ? cardVersion : `${cardVersion}-dev`;
+
 /** The land outline as an SVG path string, made from Natural Earth data at build time */
 function landPath(): Plugin {
   return {
@@ -27,6 +32,7 @@ function landPath(): Plugin {
 export default defineConfig({
   publicDir: false,
   plugins: [svelte({ compilerOptions: { css: 'injected' } }), landPath()],
+  define: { __CARD_VERSION__: JSON.stringify(CARD_VERSION) },
   server: { open: '/card-dev.html' },
   build: {
     outDir: 'dist-card',

@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **Phases 1 to 11 complete.** Phases 9 to 11: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map). Phase 12 (HACS packaging) is optional.
+> **Phases 1 to 11 complete.** Phases 9 to 11: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map). Phase 12 (HACS packaging) in progress: releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
 >
 > See `docs/phases/README.md` for overall phase status.
 
@@ -37,6 +37,7 @@ npm test             # Vitest, single run
 npm run build:card   # Home Assistant card bundle → dist-card/ephemeris-cards.js
 npm run dev:card     # card harness at /card-dev.html (mock hass)
 HA_DEPLOY_TARGET=root@host:/config/www/ephemeris npm run deploy:card
+npm run release:card # HACS release to fatcat/ephemeris-cards (see README)
 ```
 
 ## Testing

@@ -192,3 +192,7 @@ data, no time zone database.
 - The land outline is made at build time: a Vite plugin turns `src/assets/geo/land.json` into
   one rounded, relative SVG path (`virtual:ephemeris-land`). It ships as a separate chunk
   that the map imports when it mounts, so the sky card never fetches it.
+- Releases for HACS go to a separate repository, `fatcat/ephemeris-cards`, which holds no
+  source. `scripts/release-card.sh` copies `hacs/` (its README and `hacs.json`) there and
+  attaches the built `.js` files to a GitHub release. `cardVersion` in `package.json` is the
+  card version, separate from the app's.

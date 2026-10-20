@@ -64,7 +64,7 @@ declare global {
   }
 }
 
-const DOCS_URL = 'https://github.com/fatcat/ephemeris#home-assistant-cards';
+const DOCS_URL = 'https://github.com/fatcat/ephemeris-cards#readme';
 
 export function defineCard(def: CardDef): void {
   if (customElements.get(def.type)) return;

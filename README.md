@@ -232,63 +232,28 @@ Real public IPs mean you are set. One `172.x` address for everything means you m
 
 Two dashboard cards built from the same solar math: `custom:ephemeris-sky-card` (the sun's
 path across your sky) and `custom:ephemeris-daynight-card` (a world day and night map).
-Both use your Home Assistant home location, time zone and theme.
+Install them with HACS from [fatcat/ephemeris-cards](https://github.com/fatcat/ephemeris-cards).
+Install steps and card options are in [hacs/README.md](hacs/README.md), which is that
+repository's README.
 
-## Install
+## Test a build in Home Assistant
 
-1. `npm run build:card` builds `dist-card/ephemeris-cards.js`.
-2. Copy everything in `dist-card/` to `/config/www/ephemeris/` on Home Assistant (the map's
-   land outline is a second file next to the main one). With an
-   SSH add-on running, `HA_DEPLOY_TARGET=root@homeassistant.local:/config/www/ephemeris npm run deploy:card`
-   builds and copies in one step. The Samba add-on works too.
-3. In Home Assistant: Settings, Dashboards, three-dot menu, Resources, Add resource.
-   URL `/local/ephemeris/ephemeris-cards.js?v=1`, type "JavaScript module".
-4. Edit a dashboard, add a card, search for "Ephemeris".
+`npm run build:card` builds `dist-card/`. With an SSH add-on running,
+`HA_DEPLOY_TARGET=root@homeassistant.local:/config/www/ephemeris npm run deploy:card`
+builds and copies it in one step, then prints the resource URL to add (JavaScript module).
+Remove the HACS resource while testing, or both copies load and the first one registers
+the cards.
 
-After each update, change the `?v=` number on the resource (the deploy script prints one),
-or the browser keeps the old file.
+## Release
 
-## Card options
+1. Raise `cardVersion` in `package.json` and commit. Push the commit.
+2. `npm run release:card` (add `-- notes.md` for release notes, or `-- --dry-run` to stop
+   before anything is published).
 
-```yaml
-type: custom:ephemeris-sky-card
-title: Sky Dome          # optional; false hides the header
-controls: full           # none | compact | full
-reset_after: 60          # seconds idle before returning to now; 0 = never
-info: [elevation, azimuth, noon_height, sunrise, sunset, daylight]
-```
-
-Info boxes (up to 6): `status`, `elevation`, `azimuth`, `sunrise`, `sunset`, `daylight`,
-`solar_noon`, `noon_height`, `daylight_change`, `next_solstice`, `civil_dawn`, `civil_dusk`,
-`golden_hour`. The sky card adds `panel_alignment`, the day and night card `sun_overhead`.
-
-Sky card only:
-
-```yaml
-orientation: north_up          # north_up | facing_sun
-paths: [solstices, equinox, today]
-hour_markers: clock            # clock | solar | none
-panels:                        # up to 4
-  - name: South roof
-    tilt: 35                   # 0 flat, 90 vertical
-    azimuth: 180               # the way it faces: 90 E, 180 S, 270 W
-```
-
-"Sun on panels" (`panel_alignment`) shows how squarely the sun hits each panel right now,
-as a percent of full direct sunlight. It ignores clouds and shading, so it isn't a power
-estimate.
-
-Day and night card only:
-
-```yaml
-layers: [twilight, tropics, sun]
-center_longitude: 0            # -180 to 180; 150 centers on Australia
-markers: [person.alex]         # up to 8 person entities with a GPS position
-```
-
-People show where their phone last reported a GPS position; people without one are left
-off. Home is always shown. The card adds the `sun_overhead` info box.
-
+The script checks the tree is clean and the commit is pushed, runs the tests and type
+check, builds, copies `hacs/README.md`, `hacs/hacs.json` and `LICENSE` to the cards
+repository, then creates release `v<cardVersion>` there with the built `.js` files. It uses
+your `gh` login.
 
 # Development
 

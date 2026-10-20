@@ -2,6 +2,7 @@
   "name": "ephemeris",
   "private": true,
   "version": "0.2.0",
+  "cardVersion": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +13,8 @@
     "test": "vitest run",
     "build:card": "vite build --config vite.card.config.ts",
     "dev:card": "vite --config vite.card.config.ts",
-    "deploy:card": "scripts/deploy-card.sh"
+    "deploy:card": "scripts/deploy-card.sh",
+    "release:card": "scripts/release-card.sh"
   },
   "dependencies": {
     "@photostructure/tz-lookup": "^11.4.0",

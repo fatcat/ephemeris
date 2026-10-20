@@ -17,6 +17,8 @@ import {
 } from './cards/dayNightConfig.js';
 import { peopleFromHass } from './cards/people.js';
 
+console.info(`Ephemeris cards ${__CARD_VERSION__}`);
+
 defineCard({
   type: 'ephemeris-sky-card',
   name: 'Ephemeris Sky Dome',
