@@ -2,7 +2,7 @@
   import { onDestroy, type Snippet } from 'svelte';
   import type { CardState } from '../cardState.svelte.js';
   import { PATH_COLORS, PATH_COLORS_ON_LIGHT, cssHex } from '../../lib/pathColors.js';
-  import { formatNumber } from '../format.js';
+  import { formatLatitude } from '../format.js';
   import { TimeSelection } from '../timeSelection.svelte.js';
   import CardHeader from './CardHeader.svelte';
   import InfoBoxes from './InfoBoxes.svelte';
@@ -41,11 +41,7 @@
   );
 
   let title = $derived(config?.title === undefined ? cardState.defaultTitle : config.title);
-  let subtitle = $derived(
-    home
-      ? `Home · ${formatNumber(Math.abs(home.lat), home, 1)}° ${home.lat >= 0 ? 'N' : 'S'}`
-      : '',
-  );
+  let subtitle = $derived(home ? `Home · ${formatLatitude(home.lat, home)}` : '');
 
   let items = $derived(
     home && config
@@ -81,6 +77,9 @@
 
 <style>
   .card-body {
+    /* The sun marker, the same on every theme */
+    --ephemeris-sun-color: #f6c445;
+    --ephemeris-sun-edge-color: #b7860b;
     padding: 16px;
     display: flex;
     flex-direction: column;

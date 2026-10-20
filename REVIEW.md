@@ -532,11 +532,3 @@ not run live (needs a root Docker host with fail2ban + at).
 
 ---
 
-### 2026-10-20 11:52:23 (3e0f96f) — .gitignore, CLAUDE.md, README.md, card-dev.html, docs/ARCHITECTURE.md, docs/phases/README.md, docs/phases/phase-9.md, eslint.config.js, package-lock.json, package.json, scripts/deploy-card.sh, src/ha-card/cardState.svelte.ts, src/ha-card/cards/DayNightCard.svelte, src/ha-card/cards/SkyCard.svelte, src/ha-card/components/CardHeader.svelte, src/ha-card/components/CardShell.svelte, src/ha-card/components/ChartPlaceholder.svelte, src/ha-card/components/InfoBoxes.svelte, src/ha-card/components/TimeControls.svelte, src/ha-card/config.test.ts, src/ha-card/config.ts, src/ha-card/defineCard.ts, src/ha-card/dev/harness.ts, src/ha-card/dev/mockHass.ts, src/ha-card/format.test.ts, src/ha-card/format.ts, src/ha-card/home.test.ts, src/ha-card/home.ts, src/ha-card/index.ts, src/ha-card/info.test.ts, src/ha-card/info.ts, src/ha-card/timeSelection.svelte.ts, src/ha-card/timeSelection.test.ts, src/lib/astronomy/solar.ts, vite.card.config.ts
-
-I found one low-severity issue on the changed lines. The rest of the diff looks sound. I read `info.ts`, `format.ts`, `timeSelection.svelte.ts`, `config.ts`, `defineCard.ts` and `solar.ts`, and did not run the tests. The DST handling in `zonedToUtc` works for both the gap and the overlap case. `sunTimesForAltitude` handles the polar day and night cases correctly. Each info id is checked against the known list before it is used.
-
-**[LOW]** CLAUDE.md:13 — This says "Phase 9 in progress", but `docs/phases/README.md:32` marks Phase 9 "Complete" and every box in `docs/phases/phase-9.md` is ticked. The README rule is to update the status in both places when a phase finishes, so one of them is wrong. Make them agree.
-
----
-

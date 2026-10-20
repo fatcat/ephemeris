@@ -237,7 +237,8 @@ Both use your Home Assistant home location, time zone and theme.
 ## Install
 
 1. `npm run build:card` builds `dist-card/ephemeris-cards.js`.
-2. Copy the contents of `dist-card/` to `/config/www/ephemeris/` on Home Assistant. With an
+2. Copy everything in `dist-card/` to `/config/www/ephemeris/` on Home Assistant (the map's
+   land outline is a second file next to the main one). With an
    SSH add-on running, `HA_DEPLOY_TARGET=root@homeassistant.local:/config/www/ephemeris npm run deploy:card`
    builds and copies in one step. The Samba add-on works too.
 3. In Home Assistant: Settings, Dashboards, three-dot menu, Resources, Add resource.
@@ -259,7 +260,7 @@ info: [elevation, azimuth, noon_height, sunrise, sunset, daylight]
 
 Info boxes (up to 6): `status`, `elevation`, `azimuth`, `sunrise`, `sunset`, `daylight`,
 `solar_noon`, `noon_height`, `daylight_change`, `next_solstice`, `civil_dawn`, `civil_dusk`,
-`golden_hour`. The sky card adds `panel_alignment`.
+`golden_hour`. The sky card adds `panel_alignment`, the day and night card `sun_overhead`.
 
 Sky card only:
 
@@ -276,6 +277,17 @@ panels:                        # up to 4
 "Sun on panels" (`panel_alignment`) shows how squarely the sun hits each panel right now,
 as a percent of full direct sunlight. It ignores clouds and shading, so it isn't a power
 estimate.
+
+Day and night card only:
+
+```yaml
+layers: [twilight, tropics, sun]
+center_longitude: 0            # -180 to 180; 150 centers on Australia
+markers: [person.alex]         # up to 8 person entities with a GPS position
+```
+
+People show where their phone last reported a GPS position; people without one are left
+off. Home is always shown. The card adds the `sun_overhead` info box.
 
 
 # Development

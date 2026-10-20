@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **Phase 11 next:** Home Assistant day/night map card. Phases 1 to 10 complete (Phases 9 and 10: card foundation and sky card in `src/ha-card/`).
+> **Phases 1 to 11 complete.** Phases 9 to 11: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map). Phase 12 (HACS packaging) is optional.
 >
 > See `docs/phases/README.md` for overall phase status.
 

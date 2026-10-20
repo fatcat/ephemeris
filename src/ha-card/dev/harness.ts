@@ -39,7 +39,20 @@ const CARDS: CardSetup[] = [
   },
   {
     type: 'ephemeris-daynight-card',
-    config: { controls: 'compact', info: ['status', 'civil_dawn', 'civil_dusk', 'golden_hour', 'solar_noon', 'daylight_change'] },
+    config: {
+      controls: 'full',
+      markers: ['person.alex', 'person.sam', 'person.kim'],
+      info: ['status', 'sunrise', 'sunset', 'daylight', 'daylight_change', 'sun_overhead'],
+    },
+  },
+  {
+    type: 'ephemeris-daynight-card',
+    config: {
+      controls: 'compact',
+      layers: ['tropics'],
+      center_longitude: 150,
+      info: ['status', 'civil_dawn', 'civil_dusk', 'golden_hour', 'solar_noon', 'daylight_change'],
+    },
   },
   { type: 'ephemeris-sky-card', config: { title: false, controls: 'none', orientation: 'facing_sun', hour_markers: 'solar', paths: ['today'], info: ['elevation', 'azimuth', 'next_solstice'] } },
   { type: 'ephemeris-sky-card', config: { info: ['bogus'] } },

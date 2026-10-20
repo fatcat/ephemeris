@@ -6,6 +6,7 @@
 import { directBeamFraction } from '../../lib/astronomy/polarChart.js';
 import type { ChartOrientation } from '../../lib/astronomy/polarChart.js';
 import { sunElevationAzimuth } from '../../lib/astronomy/solar.js';
+import { inRange, oneOf } from '../config.js';
 import type { InfoDef } from '../info.js';
 
 export const ORIENTATIONS = ['north_up', 'facing_sun'] as const satisfies readonly ChartOrientation[];
@@ -30,18 +31,6 @@ export interface SkyConfig {
   paths: SkyPath[];
   hourMarkers: HourMarkers;
   panels: Panel[];
-}
-
-function oneOf<T extends string>(value: unknown, allowed: readonly T[], key: string): T {
-  if (!allowed.includes(value as T)) throw new Error(`"${key}" must be one of: ${allowed.join(', ')}.`);
-  return value as T;
-}
-
-function inRange(value: unknown, min: number, max: number, what: string): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
-    throw new Error(`${what} must be a number from ${min} to ${max}.`);
-  }
-  return value;
 }
 
 export function parseSkyConfig(raw: Record<string, unknown>): SkyConfig {

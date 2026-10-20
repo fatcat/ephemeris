@@ -7,11 +7,18 @@
 
 import type { FormatContext } from './format.js';
 
+/** One entity's state, as far as the cards read it */
+export interface HassEntityLike {
+  state?: unknown;
+  attributes?: Record<string, unknown>;
+}
+
 /** The subset of `hass` the cards use. Everything is optional because it comes from outside. */
 export interface HassLike {
   config?: { latitude?: unknown; longitude?: unknown; time_zone?: unknown };
   locale?: { language?: unknown; time_format?: unknown; time_zone?: unknown };
   themes?: { darkMode?: unknown };
+  states?: Record<string, HassEntityLike | undefined>;
 }
 
 export interface HomeContext extends FormatContext {

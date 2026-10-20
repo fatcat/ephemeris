@@ -18,6 +18,7 @@
   } from '../../lib/astronomy/sunPath.js';
   import { localNoon, zonedParts, zonedToUtc } from '../format.js';
   import type { HomeContext } from '../home.js';
+  import Legend, { type LegendItem } from '../components/Legend.svelte';
   import type { SkyConfig } from './skyConfig.js';
 
   let {
@@ -97,13 +98,18 @@
   };
   const colorOf = (id: SeasonalPathId) => COLOR_VAR[roles[id].role];
 
-  let legend = $derived([
-    ...shownSeasonal.map((s) => ({ name: seasonalPathLabel(s.id, roles[s.id]), color: colorOf(s.id) })),
+  let legend = $derived<LegendItem[]>([
+    ...shownSeasonal.map((s) => ({
+      name: seasonalPathLabel(s.id, roles[s.id]),
+      color: colorOf(s.id),
+      swatch: 'line' as const,
+    })),
     ...(sky.paths.includes('today')
       ? [
           {
             name: sky.hourMarkers === 'none' ? 'This day' : `This day (${sky.hourMarkers} hours)`,
             color: 'var(--ephemeris-today-color)',
+            swatch: 'line' as const,
           },
         ]
       : []),
@@ -159,13 +165,7 @@
     {/if}
   </svg>
 
-  {#if legend.length}
-    <ul class="legend" aria-label="Sun path key">
-      {#each legend as item (item.name)}
-        <li><span class="swatch" style:background={item.color}></span>{item.name}</li>
-      {/each}
-    </ul>
-  {/if}
+  <Legend label="Sun path key" items={legend} />
 </figure>
 
 <style>
@@ -256,37 +256,13 @@
   }
 
   .sun-glow {
-    fill: #f6c445;
+    fill: var(--ephemeris-sun-color);
     opacity: 0.3;
   }
 
   .sun {
-    fill: #f6c445;
-    stroke: #b7860b;
+    fill: var(--ephemeris-sun-color);
+    stroke: var(--ephemeris-sun-edge-color);
     stroke-width: 1.5;
-  }
-
-  .legend {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 16px;
-    font-size: 12px;
-    color: var(--secondary-text-color);
-  }
-
-  .legend li {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .swatch {
-    width: 16px;
-    height: 4px;
-    border-radius: 2px;
   }
 </style>

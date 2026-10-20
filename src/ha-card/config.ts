@@ -35,6 +35,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** Throws unless `value` is one of `allowed` */
+export function oneOf<T extends string>(value: unknown, allowed: readonly T[], key: string): T {
+  if (!allowed.includes(value as T)) throw new Error(`"${key}" must be one of: ${allowed.join(', ')}.`);
+  return value as T;
+}
+
+/** Throws unless `value` is a finite number from `min` to `max` */
+export function inRange(value: unknown, min: number, max: number, what: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+    throw new Error(`${what} must be a number from ${min} to ${max}.`);
+  }
+  return value;
+}
+
 export function parseSharedConfig(
   raw: unknown,
   infoIds: readonly string[],
@@ -49,10 +63,6 @@ export function parseSharedConfig(
   }
   if (typeof title === 'string' && title.length > MAX_TITLE_LENGTH) {
     throw new Error(`"title" can be at most ${MAX_TITLE_LENGTH} characters.`);
-  }
-
-  if (!CONTROLS.includes(controls as Controls)) {
-    throw new Error(`"controls" must be one of: ${CONTROLS.join(', ')}.`);
   }
 
   if (
@@ -77,7 +87,7 @@ export function parseSharedConfig(
 
   return {
     title: typeof title === 'string' && title.trim() === '' ? undefined : title,
-    controls: controls as Controls,
+    controls: oneOf(controls, CONTROLS, 'controls'),
     resetAfter: reset_after,
     info: [...info] as string[],
   };

@@ -5,3 +5,6 @@ dev-dist/
 *.local
 certs/*
 dist-card/
+
+# Playwright MCP session files
+.playwright-mcp/

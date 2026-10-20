@@ -31,6 +31,7 @@ When a phase is complete, update the status below and in CLAUDE.md.
 | 8 | [Sky Dome View](phase-8.md) | Complete | Sun paths across the local sky; view registry; 4-view limit |
 | 9 | [Home Assistant Card Foundation](phase-9.md) | Complete | Card build target, shared card parts, config, tests |
 | 10 | [Sky Dome Card](phase-10.md) | Complete | 2D sun-path chart, orientation toggle, solar panels |
+| 11 | [Day and Night Map Card](phase-11.md) | Complete | World map with twilight bands, people, wrap |
 
 ## Phase Dependencies
 

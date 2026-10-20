@@ -13,6 +13,8 @@ export class CardState {
   // Replaced every minute, never mutated, so a plain Date is enough
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   now = $state.raw(new Date());
+  /** What the card's `fromHass` read from Home Assistant, such as people's positions */
+  hassData = $state.raw<unknown>(null);
   /** Shared and card-specific info boxes this card can show */
   infoDefs: Record<string, InfoDef>;
   defaultTitle: string;

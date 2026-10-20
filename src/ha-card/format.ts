@@ -121,6 +121,16 @@ export function formatNumber(value: number, ctx: FormatContext, digits: number):
   }).format(value);
 }
 
+/** Latitude as "59.9° N" */
+export function formatLatitude(lat: number, ctx: FormatContext): string {
+  return `${formatNumber(Math.abs(lat), ctx, 1)}° ${lat >= 0 ? 'N' : 'S'}`;
+}
+
+/** Longitude as "10.8° E" */
+export function formatLongitude(lon: number, ctx: FormatContext): string {
+  return `${formatNumber(Math.abs(lon), ctx, 1)}° ${lon >= 0 ? 'E' : 'W'}`;
+}
+
 /** Hours as "14h 05m" */
 export function formatDuration(hours: number): string {
   const total = Math.round(hours * 60);

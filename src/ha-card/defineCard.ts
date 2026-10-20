@@ -38,6 +38,12 @@ export interface CardDef {
   extraSchema?: readonly object[];
   extraLabels?: Record<string, string>;
   extraHelpers?: Record<string, string>;
+  /**
+   * Reads what the card needs from `hass` beyond the home location, given its parsed
+   * options. The result reaches components as `cardState.hassData`; it should be
+   * small plain data, since it is compared as JSON on every `hass` update.
+   */
+  fromHass?: (hass: HassLike, card: unknown) => unknown;
   component: Component<{ cardState: CardState }>;
   /** Masonry height in 50 px units */
   cardSize: number;
@@ -78,6 +84,8 @@ export function defineCard(def: CardDef): void {
     #state = new CardState(def.defaultTitle, infoDefs);
     #app: Record<string, unknown> | null = null;
     #tick: ReturnType<typeof setTimeout> | undefined;
+    #hass: HassLike | null = null;
+    #hassJson = 'null';
 
     constructor() {
       super();
@@ -86,12 +94,24 @@ export function defineCard(def: CardDef): void {
 
     setConfig(raw: unknown): void {
       this.#state.config = parse(raw);
+      this.#readHassData();
     }
 
     set hass(hass: HassLike) {
       // HA sets this on every state change anywhere in the house: only react to our fields
+      this.#hass = hass;
       const home = homeFromHass(hass);
       if (!sameHome(home, this.#state.home)) this.#state.home = home;
+      this.#readHassData();
+    }
+
+    #readHassData(): void {
+      if (!def.fromHass || !this.#hass || !this.#state.config) return;
+      const data = def.fromHass(this.#hass, this.#state.config.card);
+      const json = JSON.stringify(data);
+      if (json === this.#hassJson) return;
+      this.#hassJson = json;
+      this.#state.hassData = data;
     }
 
     connectedCallback(): void {

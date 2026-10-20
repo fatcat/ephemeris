@@ -43,8 +43,16 @@ export interface MockOptions {
   language: string;
 }
 
+/** People for the map card: one with a GPS fix abroad, one at sea, one with no fix */
+export const PEOPLE = {
+  'person.alex': { state: 'not_home', attributes: { friendly_name: 'Alex', latitude: 35.68, longitude: 139.69 } },
+  'person.sam': { state: 'not_home', attributes: { friendly_name: 'Sam', latitude: -8.5, longitude: -140.2 } },
+  'person.kim': { state: 'unknown', attributes: { friendly_name: 'Kim' } },
+};
+
 export function mockHass(o: MockOptions): HassLike {
   return {
+    states: { ...PEOPLE },
     config: { ...HOMES[o.home] },
     locale: { language: o.language, time_format: o.timeFormat, time_zone: o.zonePref },
     themes: { darkMode: o.theme === 'dark' },

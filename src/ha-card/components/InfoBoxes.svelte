@@ -60,7 +60,9 @@
     font-size: 16px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    overflow-wrap: anywhere;
+    /* Long words like "(afternoon)" hyphenate on narrow cards instead of breaking anywhere */
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   .info-row {

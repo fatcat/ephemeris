@@ -184,3 +184,11 @@ data, no time zone database.
 - Time zones use Intl only: `zonedToUtc` turns a wall-clock time in HA's zone into an instant.
 - `info.ts` maps info box ids to labels and pure value functions. Cards can add their own ids.
 - `card-dev.html` runs the real bundle entry against a mock `hass` for Playwright checks.
+- Cards that need more of `hass` than the home location supply `fromHass`. Its result is
+  compared as JSON, so the map card only re-renders when a watched person moves.
+- The day/night map draws `daylightRegions.ts` output as SVG. Along a meridian the sun's
+  altitude is R·cos(lat − α), so each meridian's dark stretch has a closed form; for
+  thresholds at or below 0° it is one stretch, and neighboring meridians join into polygons.
+- The land outline is made at build time: a Vite plugin turns `src/assets/geo/land.json` into
+  one rounded, relative SVG path (`virtual:ephemeris-land`). It ships as a separate chunk
+  that the map imports when it mounts, so the sky card never fetches it.
