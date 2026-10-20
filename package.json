@@ -8,7 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build:card": "vite build --config vite.card.config.ts",
+    "dev:card": "vite --config vite.card.config.ts",
+    "deploy:card": "scripts/deploy-card.sh"
   },
   "dependencies": {
     "@photostructure/tz-lookup": "^11.4.0",
@@ -26,6 +30,7 @@
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0",
     "vite": "^6.0.0",
-    "vite-plugin-pwa": "^0.21.0"
+    "vite-plugin-pwa": "^0.21.0",
+    "vitest": "^3.2.6"
   }
 }

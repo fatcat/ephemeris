@@ -164,3 +164,23 @@ Data is converted from Shapefile/GeoJSON to a compact format at build time and b
 - All textures are equirectangular projection
 - Compressed as WebP with PNG fallback
 - Total texture payload: ~5MB
+
+## Home Assistant Cards
+
+A second Vite build (`vite.card.config.ts`) bundles `src/ha-card/` into one ES module,
+`dist-card/ephemeris-cards.js`, that registers the Ephemeris dashboard cards. The cards
+reuse `src/lib/astronomy/` and nothing else from the app: no Three.js, no stores, no place
+data, no time zone database.
+
+- `defineCard.ts` builds each card's custom element from a small description (type, default
+  title and info boxes, Svelte component, sizes). The element implements HA's card API,
+  validates config, reads the home context from `hass`, and ticks `now` once a minute while
+  the page is visible. HA sets `hass` on every state change anywhere, so the element compares
+  the few fields it uses and ignores the rest.
+- The element mounts a Svelte tree into its shadow root and passes one reactive `CardState`.
+  Svelte injects component CSS into that shadow root. Colors come from HA's theme variables.
+- `CardShell.svelte` lays out header, chart (a snippet each card supplies), info boxes and
+  time controls. `TimeSelection` owns live vs picked time, play and snap-back.
+- Time zones use Intl only: `zonedToUtc` turns a wall-clock time in HA's zone into an instant.
+- `info.ts` maps info box ids to labels and pure value functions. Cards can add their own ids.
+- `card-dev.html` runs the real bundle entry against a mock `hass` for Playwright checks.

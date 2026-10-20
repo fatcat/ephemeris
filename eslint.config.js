@@ -24,6 +24,6 @@ export default ts.config(
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', 'dev-dist/'],
+    ignores: ['dist/', 'dist-card/', 'node_modules/', 'dev-dist/'],
   },
 );

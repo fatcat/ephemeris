@@ -228,6 +228,40 @@ awk '{print $1}' /var/log/ephemeris/access.log | sort | uniq -c | sort -rn | hea
 Real public IPs mean you are set. One `172.x` address for everything means you must fix this before relying on either ban layer. Set `userland-proxy: false` in the Docker daemon config, or use host networking. If a reverse proxy sits in front, forward the real client IP and configure nginx `real_ip` so `$remote_addr` is the true client.
 
 
+# Home Assistant cards
+
+Two dashboard cards built from the same solar math: `custom:ephemeris-sky-card` (the sun's
+path across your sky) and `custom:ephemeris-daynight-card` (a world day and night map).
+Both use your Home Assistant home location, time zone and theme.
+
+## Install
+
+1. `npm run build:card` builds `dist-card/ephemeris-cards.js`.
+2. Copy the contents of `dist-card/` to `/config/www/ephemeris/` on Home Assistant. With an
+   SSH add-on running, `HA_DEPLOY_TARGET=root@homeassistant.local:/config/www/ephemeris npm run deploy:card`
+   builds and copies in one step. The Samba add-on works too.
+3. In Home Assistant: Settings, Dashboards, three-dot menu, Resources, Add resource.
+   URL `/local/ephemeris/ephemeris-cards.js?v=1`, type "JavaScript module".
+4. Edit a dashboard, add a card, search for "Ephemeris".
+
+After each update, change the `?v=` number on the resource (the deploy script prints one),
+or the browser keeps the old file.
+
+## Card options
+
+```yaml
+type: custom:ephemeris-sky-card
+title: Sky Dome          # optional; false hides the header
+controls: full           # none | compact | full
+reset_after: 60          # seconds idle before returning to now; 0 = never
+info: [elevation, azimuth, noon_height, sunrise, sunset, daylight]
+```
+
+Info boxes (up to 6): `status`, `elevation`, `azimuth`, `sunrise`, `sunset`, `daylight`,
+`solar_noon`, `noon_height`, `daylight_change`, `next_solstice`, `civil_dawn`, `civil_dusk`,
+`golden_hour`.
+
+
 # Development
 
 ## Tech Stack
@@ -243,6 +277,8 @@ npm run dev          # dev server with HMR
 npm run build        # production build
 npm run check        # type checking (svelte-check)
 npm run lint         # eslint
+npm test             # unit tests (Vitest)
+npm run dev:card     # Home Assistant card harness
 ```
 
 ## How the image works

@@ -4,3 +4,4 @@ dev-dist/
 .vite/
 *.local
 certs/*
+dist-card/
