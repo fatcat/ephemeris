@@ -32,11 +32,22 @@ export interface InfoInput {
   /** The moment the card is showing */
   instant: Date;
   home: HomeContext;
+  /** The card's own parsed options, for card-specific boxes */
+  card: unknown;
 }
+
+/** One line of a multi-row box, such as a solar panel and its share of sunlight */
+export interface InfoRow {
+  name: string;
+  percent: number;
+}
+
+/** Plain text, or rows with a small bar each */
+export type InfoValue = string | { rows: InfoRow[] };
 
 export interface InfoDef {
   label: string;
-  value: (input: InfoInput) => string;
+  value: (input: InfoInput) => InfoValue;
 }
 
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];

@@ -3,6 +3,8 @@
   import { formatMinutes } from '../format.js';
   import type { HomeContext } from '../home.js';
   import type { TimeSelection } from '../timeSelection.svelte.js';
+  import Chip from './Chip.svelte';
+  import ChipGroup from './ChipGroup.svelte';
 
   let {
     selection,
@@ -20,16 +22,12 @@
 {#if controls !== 'none'}
   <div class="time-controls">
     {#if controls === 'full'}
-      <div class="chips" role="group" aria-label="Day">
-        {#each days as d (d.id)}
-          <button
-            type="button"
-            class="chip"
-            aria-pressed={selection.day() === d.id}
-            onclick={() => selection.pickDay(d.id, now, home.timeZone)}>{d.label}</button
-          >
-        {/each}
-      </div>
+      <ChipGroup
+        label="Day"
+        options={days}
+        selected={selection.day()}
+        onpick={(id) => selection.pickDay(id, now, home.timeZone)}
+      />
     {/if}
 
     <div class="time-row">
@@ -66,7 +64,7 @@
       <span class="clock">{formatMinutes(minutes, home)}</span>
 
       {#if !selection.live}
-        <button type="button" class="chip now" onclick={() => selection.goLive()}>Now</button>
+        <Chip label="Now" onclick={() => selection.goLive()} />
       {/if}
     </div>
   </div>
@@ -79,31 +77,6 @@
     gap: 8px;
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .chip {
-    min-height: 44px;
-    padding: 0 14px;
-    border-radius: 22px;
-    border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.4));
-    background: var(--secondary-background-color, transparent);
-    color: var(--primary-text-color);
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
-  }
-
-  .chip[aria-pressed='true'] {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: var(--text-primary-color, #fff);
-  }
-
-  .chip:focus-visible,
   .icon-button:focus-visible,
   input:focus-visible {
     outline: 2px solid var(--primary-color);
@@ -158,7 +131,4 @@
     white-space: nowrap;
   }
 
-  .now {
-    flex-shrink: 0;
-  }
 </style>

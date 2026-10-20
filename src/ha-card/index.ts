@@ -6,6 +6,7 @@
 import { defineCard } from './defineCard.js';
 import SkyCard from './cards/SkyCard.svelte';
 import DayNightCard from './cards/DayNightCard.svelte';
+import { SKY_HELPERS, SKY_INFO, SKY_LABELS, SKY_SCHEMA, parseSkyConfig } from './cards/skyConfig.js';
 
 defineCard({
   type: 'ephemeris-sky-card',
@@ -14,6 +15,11 @@ defineCard({
   defaultTitle: 'Sky Dome',
   defaultInfo: ['elevation', 'azimuth', 'noon_height', 'sunrise', 'sunset', 'daylight'],
   component: SkyCard,
+  extraInfo: SKY_INFO,
+  parseCard: parseSkyConfig,
+  extraSchema: SKY_SCHEMA,
+  extraLabels: SKY_LABELS,
+  extraHelpers: SKY_HELPERS,
   cardSize: 12,
   gridOptions: { columns: 6, min_columns: 4 },
 });

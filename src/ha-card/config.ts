@@ -22,6 +22,11 @@ export interface SharedConfig {
   info: string[];
 }
 
+/** Shared options plus the card's own, as its `parseCard` returned them */
+export interface CardConfig extends SharedConfig {
+  card: unknown;
+}
+
 export interface SharedDefaults {
   info: readonly string[];
 }

@@ -8,7 +8,7 @@
 
 import { mount, unmount, type Component } from 'svelte';
 import { CardState } from './cardState.svelte.js';
-import { CONTROLS, MAX_RESET_AFTER, parseSharedConfig } from './config.js';
+import { CONTROLS, MAX_RESET_AFTER, parseSharedConfig, type CardConfig } from './config.js';
 import { homeFromHass, sameHome, type HassLike } from './home.js';
 import { MAX_INFO, SHARED_INFO, type InfoDef } from './info.js';
 
@@ -32,7 +32,13 @@ export interface CardDef {
   defaultInfo: readonly string[];
   /** Info boxes only this card offers */
   extraInfo?: Record<string, InfoDef>;
-  component: Component<{ state: CardState }>;
+  /** Validates the card's own options (throws on bad ones); the result reaches components as `config.card` */
+  parseCard?: (raw: Record<string, unknown>) => unknown;
+  /** Editor fields for the card's own options, after the shared ones */
+  extraSchema?: readonly object[];
+  extraLabels?: Record<string, string>;
+  extraHelpers?: Record<string, string>;
+  component: Component<{ cardState: CardState }>;
   /** Masonry height in 50 px units */
   cardSize: number;
   gridOptions: GridOptions;
@@ -59,6 +65,14 @@ export function defineCard(def: CardDef): void {
 
   const infoDefs: Record<string, InfoDef> = { ...SHARED_INFO, ...def.extraInfo };
   const infoIds = Object.keys(infoDefs);
+  const labels = { ...FORM_LABELS, ...def.extraLabels };
+  const helpers = { ...FORM_HELPERS, ...def.extraHelpers };
+
+  function parse(raw: unknown): CardConfig {
+    const shared = parseSharedConfig(raw, infoIds, { info: def.defaultInfo });
+    // parseSharedConfig has checked raw is an object
+    return { ...shared, card: def.parseCard?.(raw as Record<string, unknown>) ?? null };
+  }
 
   class EphemerisCard extends HTMLElement {
     #state = new CardState(def.defaultTitle, infoDefs);
@@ -71,7 +85,7 @@ export function defineCard(def: CardDef): void {
     }
 
     setConfig(raw: unknown): void {
-      this.#state.config = parseSharedConfig(raw, infoIds, { info: def.defaultInfo });
+      this.#state.config = parse(raw);
     }
 
     set hass(hass: HassLike) {
@@ -82,7 +96,7 @@ export function defineCard(def: CardDef): void {
 
     connectedCallback(): void {
       if (!this.#app && this.shadowRoot) {
-        this.#app = mount(def.component, { target: this.shadowRoot, props: { state: this.#state } });
+        this.#app = mount(def.component, { target: this.shadowRoot, props: { cardState: this.#state } });
       }
       document.addEventListener('visibilitychange', this.#onVisibility);
       this.#startTick();
@@ -136,11 +150,12 @@ export function defineCard(def: CardDef): void {
               },
             },
           },
+          ...(def.extraSchema ?? []),
         ],
-        computeLabel: (field: { name: string }) => FORM_LABELS[field.name],
-        computeHelper: (field: { name: string }) => FORM_HELPERS[field.name],
+        computeLabel: (field: { name: string }) => labels[field.name],
+        computeHelper: (field: { name: string }) => helpers[field.name],
         assertConfig: (config: unknown) => {
-          parseSharedConfig(config, infoIds, { info: def.defaultInfo });
+          parse(config);
         },
       };
     }

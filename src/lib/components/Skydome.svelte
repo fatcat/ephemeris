@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
+  import { createSkydomeScene, type SkydomeScene } from '../three/skydomeScene.js';
   import {
-    createSkydomeScene,
-    PATH_COLORS,
-    type SkydomeScene,
+    SEASONAL_PATH_NAMES,
+    seasonalPathLabel,
+    type SeasonalPathId,
     type SeasonalPathInfo,
-  } from '../three/skydomeScene.js';
-  import type { SeasonalPathId } from '../astronomy/sunPath.js';
+  } from '../astronomy/sunPath.js';
+  import { PATH_COLORS, cssHex } from '../pathColors.js';
   import { currentTime } from '../stores/time.js';
   import { userLocation, currentThemeId, axialTilt } from '../stores/settings.js';
   import { getThemeById } from '../themes.js';
@@ -21,21 +22,11 @@
   let sunDown = $state(false);
   let pathInfo: Record<SeasonalPathId, SeasonalPathInfo> | null = $state.raw(null);
 
-  const LEGEND_NAMES: Record<SeasonalPathId, string> = {
-    juneSolstice: 'June solstice',
-    marchEquinox: 'Equinoxes',
-    decemberSolstice: 'December solstice',
-  };
-
-  function cssHex(color: number): string {
-    return `#${color.toString(16).padStart(6, '0')}`;
-  }
-
   let legend = $derived(
     pathInfo
       ? [
-          ...(Object.keys(LEGEND_NAMES) as SeasonalPathId[]).map((id) => ({
-            name: pathInfo![id].rises ? LEGEND_NAMES[id] : `${LEGEND_NAMES[id]} (sun never rises)`,
+          ...(Object.keys(SEASONAL_PATH_NAMES) as SeasonalPathId[]).map((id) => ({
+            name: seasonalPathLabel(id, pathInfo![id]),
             color: cssHex(PATH_COLORS[pathInfo![id].role]),
           })),
           { name: 'Today (solar hours)', color: cssHex(PATH_COLORS.today) },

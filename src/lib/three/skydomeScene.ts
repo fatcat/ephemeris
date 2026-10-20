@@ -42,9 +42,12 @@ import {
   sunPathForDay,
   seasonalPaths,
   solarHourMarkers,
+  seasonalPathInfo,
   type SkyPoint,
   type SeasonalPathId,
+  type SeasonalPathInfo,
 } from '../astronomy/sunPath.js';
+import { PATH_COLORS } from '../pathColors.js';
 import type { Theme } from '../themes.js';
 
 // ── Constants ──
@@ -57,14 +60,6 @@ const HOUR_LABEL_R = R * 1.07;
 const PATH_TUBE = 0.06;
 const TODAY_TUBE = 0.11;
 
-/** Path colors, keyed by how the path relates to the observer's seasons. */
-export const PATH_COLORS = {
-  summer: 0xe08a3c, // warm orange: the solstice with the higher sun
-  winter: 0x5b8fd6, // cool blue: the solstice with the lower sun
-  equinox: 0x9aa3ad, // neutral gray
-  today: 0xf2c94c, // sun yellow
-} as const;
-
 const GROUND_COLOR = 0x5f6b55; // muted olive, textbook map green
 const DOME_COLOR = 0x9cc3e6;
 const GRID_COLOR = 0xb8c8d8;
@@ -73,17 +68,6 @@ const GRID_COLOR = 0xb8c8d8;
 const CAMERA_BACK = 29;
 const CAMERA_UP = 10;
 const CAMERA_TARGET_Y = 2.5;
-
-export type PathRole = keyof typeof PATH_COLORS;
-
-export interface SeasonalPathInfo {
-  role: PathRole;
-  /** False when the sun never rises that day (polar night) */
-  rises: boolean;
-}
-
-/** Solstice peaks closer than this count as equal: no seasons (axial tilt near 0). */
-const NO_SEASON_EPSILON_DEG = 0.5;
 
 export interface SkydomeUpdate {
   time: Date;
@@ -255,22 +239,8 @@ export function createSkydomeScene(container: HTMLElement): SkydomeScene {
     clearGroup(pathGroup);
 
     const seasonal = seasonalPaths(time.getUTCFullYear(), latDeg, lonDeg, tiltDeg);
-    const peak = (pts: SkyPoint[]) => pts.reduce((m, p) => Math.max(m, p.elevation), -90);
-    const june = seasonal.find((s) => s.id === 'juneSolstice')!;
-    const dec = seasonal.find((s) => s.id === 'decemberSolstice')!;
-    const diff = peak(june.points) - peak(dec.points);
-    const noSeasons = Math.abs(diff) < NO_SEASON_EPSILON_DEG;
-    const juneRole: PathRole = noSeasons ? 'equinox' : diff > 0 ? 'summer' : 'winter';
-    const decRole: PathRole = noSeasons ? 'equinox' : diff > 0 ? 'winter' : 'summer';
-    const roleOf: Record<SeasonalPathId, PathRole> = {
-      juneSolstice: juneRole,
-      marchEquinox: 'equinox',
-      decemberSolstice: decRole,
-    };
-    info = Object.fromEntries(
-      seasonal.map((s) => [s.id, { role: roleOf[s.id], rises: s.points.length > 1 }]),
-    ) as Record<SeasonalPathId, SeasonalPathInfo>;
-    for (const s of seasonal) addTube(s.points, PATH_TUBE, PATH_COLORS[roleOf[s.id]]);
+    info = seasonalPathInfo(seasonal);
+    for (const s of seasonal) addTube(s.points, PATH_TUBE, PATH_COLORS[info[s.id].role]);
 
     addTube(sunPathForDay(time, latDeg, lonDeg, tiltDeg), TODAY_TUBE, PATH_COLORS.today);
 

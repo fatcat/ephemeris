@@ -1,14 +1,25 @@
 <script lang="ts">
-  let { items }: { items: { id: string; label: string; value: string }[] } = $props();
+  import type { InfoValue } from '../info.js';
+
+  let { items }: { items: { id: string; label: string; value: InfoValue }[] } = $props();
 </script>
 
 {#if items.length}
   <div class="info-wrap">
   <dl class="info-boxes">
     {#each items as item (item.id)}
-      <div class="info-box">
+      <div class="info-box" class:wide={typeof item.value !== 'string'}>
         <dt>{item.label}</dt>
-        <dd>{item.value}</dd>
+        {#if typeof item.value === 'string'}
+          <dd>{item.value}</dd>
+        {:else}
+          {#each item.value.rows as row, i (i)}
+            <dd class="info-row">
+              <span class="info-row-text"><span class="row-name" title={row.name}>{row.name}</span><span class="pct">{row.percent}%</span></span>
+              <span class="bar" aria-hidden="true"><span style:width="{row.percent}%"></span></span>
+            </dd>
+          {/each}
+        {/if}
       </div>
     {/each}
   </dl>
@@ -25,6 +36,7 @@
     margin: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: dense;
     gap: 8px;
   }
 
@@ -51,9 +63,55 @@
     overflow-wrap: anywhere;
   }
 
+  .info-row {
+    font-size: 12px;
+    font-weight: 400;
+    overflow-wrap: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .info-row-text {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .row-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pct {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .bar {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--divider-color, rgba(127, 127, 127, 0.3));
+    overflow: hidden;
+  }
+
+  .bar > span {
+    display: block;
+    height: 100%;
+    background: var(--ephemeris-today-color, var(--primary-color));
+  }
+
   @container (max-width: 340px) {
     dd {
       font-size: 14px;
+    }
+
+    /* Panel names need the room more than the box needs to stay square */
+    .wide {
+      grid-column: 1 / -1;
     }
   }
 

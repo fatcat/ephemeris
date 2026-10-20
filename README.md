@@ -259,7 +259,23 @@ info: [elevation, azimuth, noon_height, sunrise, sunset, daylight]
 
 Info boxes (up to 6): `status`, `elevation`, `azimuth`, `sunrise`, `sunset`, `daylight`,
 `solar_noon`, `noon_height`, `daylight_change`, `next_solstice`, `civil_dawn`, `civil_dusk`,
-`golden_hour`.
+`golden_hour`. The sky card adds `panel_alignment`.
+
+Sky card only:
+
+```yaml
+orientation: north_up          # north_up | facing_sun
+paths: [solstices, equinox, today]
+hour_markers: clock            # clock | solar | none
+panels:                        # up to 4
+  - name: South roof
+    tilt: 35                   # 0 flat, 90 vertical
+    azimuth: 180               # the way it faces: 90 E, 180 S, 270 W
+```
+
+"Sun on panels" (`panel_alignment`) shows how squarely the sun hits each panel right now,
+as a percent of full direct sunlight. It ignores clouds and shading, so it isn't a power
+estimate.
 
 
 # Development

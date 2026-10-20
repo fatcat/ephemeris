@@ -3,12 +3,12 @@
  * The element writes it; components only read.
  */
 
-import type { SharedConfig } from './config.js';
+import type { CardConfig } from './config.js';
 import type { HomeContext } from './home.js';
 import type { InfoDef } from './info.js';
 
 export class CardState {
-  config = $state.raw<SharedConfig | null>(null);
+  config = $state.raw<CardConfig | null>(null);
   home = $state.raw<HomeContext | null>(null);
   // Replaced every minute, never mutated, so a plain Date is enough
   // eslint-disable-next-line svelte/prefer-svelte-reactivity

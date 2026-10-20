@@ -3,7 +3,7 @@ import type { HomeContext } from './home.js';
 import { SHARED_INFO, nextSolstice, type SharedInfoId } from './info.js';
 
 const at = (iso: string, home: HomeContext) => (id: SharedInfoId) =>
-  SHARED_INFO[id].value({ instant: new Date(iso), home });
+  SHARED_INFO[id].value({ instant: new Date(iso), home, card: null }) as string;
 
 const oslo: HomeContext = { lat: 59.91, lon: 10.75, timeZone: 'Europe/Oslo', language: 'en', hour12: false, dark: false };
 const tromso: HomeContext = { ...oslo, lat: 69.65, lon: 18.96 };

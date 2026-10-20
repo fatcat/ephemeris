@@ -25,12 +25,23 @@ interface CardSetup {
 }
 
 const CARDS: CardSetup[] = [
-  { type: 'ephemeris-sky-card', config: { controls: 'full', reset_after: 20 } },
+  {
+    type: 'ephemeris-sky-card',
+    config: {
+      controls: 'full',
+      reset_after: 20,
+      info: ['elevation', 'azimuth', 'noon_height', 'sunrise', 'sunset', 'panel_alignment'],
+      panels: [
+        { name: 'South roof', tilt: 35, azimuth: 180 },
+        { name: 'Garage', tilt: 10, azimuth: 270 },
+      ],
+    },
+  },
   {
     type: 'ephemeris-daynight-card',
     config: { controls: 'compact', info: ['status', 'civil_dawn', 'civil_dusk', 'golden_hour', 'solar_noon', 'daylight_change'] },
   },
-  { type: 'ephemeris-sky-card', config: { title: false, controls: 'none', info: ['elevation', 'azimuth', 'next_solstice'] } },
+  { type: 'ephemeris-sky-card', config: { title: false, controls: 'none', orientation: 'facing_sun', hour_markers: 'solar', paths: ['today'], info: ['elevation', 'azimuth', 'next_solstice'] } },
   { type: 'ephemeris-sky-card', config: { info: ['bogus'] } },
 ];
 
