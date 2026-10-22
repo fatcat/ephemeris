@@ -56,4 +56,4 @@ Let the day and night card switch between the world map and a globe facing home.
 - [x] `npm test` (122), `npm run check` pass; card lint clean
 - [ ] In HA: both views on a real dashboard, `view: globe` in the visual editor
 - [x] Released as cards v1.1.0
-- [ ] Released as cards v1.1.1 (land outline in the main file)
+- [x] Released as cards v1.1.1 (land outline in the main file)
