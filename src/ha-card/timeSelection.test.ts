@@ -56,4 +56,18 @@ describe('TimeSelection', () => {
     vi.advanceTimersByTime(6_000);
     expect(sel.live).toBe(true);
   });
+
+  it('pauses live time first, then plays the day', () => {
+    expect(sel.moving).toBe(true);
+    sel.togglePlay(now, TZ);
+    expect(sel.live).toBe(false);
+    expect(sel.playing).toBe(false);
+    expect(sel.moving).toBe(false);
+    const paused = sel.picked?.minutes;
+    vi.advanceTimersByTime(1_000);
+    expect(sel.picked?.minutes).toBe(paused);
+    sel.togglePlay(now, TZ);
+    expect(sel.playing).toBe(true);
+    expect(sel.moving).toBe(true);
+  });
 });

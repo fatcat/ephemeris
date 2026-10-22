@@ -4,8 +4,8 @@ Two Home Assistant dashboard cards that show what the sun is doing where you liv
 
 - `custom:ephemeris-sky-card`: the sun's path across your sky today, at the solstices and at
   the equinox, with optional solar panels.
-- `custom:ephemeris-daynight-card`: a world map of day, twilight and night right now, with
-  your home and the people in your house.
+- `custom:ephemeris-daynight-card`: a world map or a globe facing your home, showing day,
+  twilight and night right now, with your home and the people in your house.
 
 Both use your Home Assistant home location, time zone and theme. The solar math runs in
 the browser, so the cards need no integration, sensor or internet service.
@@ -73,13 +73,15 @@ estimate.
 ### Day and night card
 
 ```yaml
+view: map                      # map | globe; the card has a Map and Globe switch too
 layers: [twilight, tropics, sun]
-center_longitude: 0            # -180 to 180; 150 centers on Australia
+center_longitude: 0            # map only: -180 to 180; 150 centers on Australia
 markers: [person.alex]         # up to 8 person entities with a GPS position
 ```
 
 People show where their phone last reported a GPS position; people without one are left
-off. Home is always shown.
+off. Home is always shown. The globe always faces home, so people on the far side of the
+Earth are hidden until you switch to the map.
 
 ## License
 

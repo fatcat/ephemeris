@@ -249,6 +249,11 @@ Install them with HACS from [fatcat/ephemeris-cards](https://github.com/fatcat/e
 Install steps and card options are in [hacs/README.md](hacs/README.md), which is that
 repository's README.
 
+<p align="center">
+  <img src="docs/ephemeris%20cards%201.png" alt="Day and Night card: world map with twilight bands, home and the point where the sun is overhead" width="49%">
+  <img src="docs/ephemeris%20cards%202.png" alt="Sky Dome card: the sun's path today and at the solstices and equinoxes, north up" width="49%">
+</p>
+
 ## Test a build in Home Assistant
 
 `npm run build:card` builds `dist-card/`. With an SSH add-on running,

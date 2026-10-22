@@ -48,6 +48,16 @@ const CARDS: CardSetup[] = [
   {
     type: 'ephemeris-daynight-card',
     config: {
+      title: 'Globe',
+      view: 'globe',
+      controls: 'full',
+      markers: ['person.alex', 'person.sam'],
+      info: ['status', 'sunrise', 'sunset', 'sun_overhead'],
+    },
+  },
+  {
+    type: 'ephemeris-daynight-card',
+    config: {
       controls: 'compact',
       layers: ['tropics'],
       center_longitude: 150,
