@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **Phases 1 to 11 complete.** Phases 9 to 11: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map). Phase 12 (HACS packaging) in progress: releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
+> **Phases 1 to 12 complete.** Phases 9 to 12: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map, HACS packaging). Releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
 >
 > See `docs/phases/README.md` for overall phase status.
 

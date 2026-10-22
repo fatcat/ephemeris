@@ -48,8 +48,8 @@ Phases 9 to 11 built the cards. Until now they were copied to `/config/www/` wit
 - [x] Dev build logs `Ephemeris cards 1.0.0-dev`, release build `1.0.0`
 - [x] Card picker's documentation link goes to the cards repository
 - [x] `npm test` (113), `npm run check` pass
-- [ ] `fatcat/ephemeris-cards` created: public, description, topics
-- [ ] `npm run release:card -- --dry-run` passes every check and publishes nothing
-- [ ] Release v1.0.0 has `ephemeris-cards.js` and the land chunk
-- [ ] In HA: added as a custom repository, downloaded, resource registered, both cards load
-- [ ] Console in HA shows `Ephemeris cards 1.0.0`
+- [x] `fatcat/ephemeris-cards` created: public, description, topics
+- [x] `npm run release:card -- --dry-run` passes every check and publishes nothing
+- [x] Release v1.0.0 has `ephemeris-cards.js` and the land chunk
+- [x] In HA: added as a custom repository, downloaded, resource registered, both cards load
+- [x] Console in HA shows `Ephemeris cards 1.0.0`

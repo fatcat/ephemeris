@@ -32,7 +32,7 @@ When a phase is complete, update the status below and in CLAUDE.md.
 | 9 | [Home Assistant Card Foundation](phase-9.md) | Complete | Card build target, shared card parts, config, tests |
 | 10 | [Sky Dome Card](phase-10.md) | Complete | 2D sun-path chart, orientation toggle, solar panels |
 | 11 | [Day and Night Map Card](phase-11.md) | Complete | World map with twilight bands, people, wrap |
-| 12 | [HACS Packaging](phase-12.md) | In progress | Releases repository, release script, card version |
+| 12 | [HACS Packaging](phase-12.md) | Complete | Releases repository, release script, card version |
 
 ## Phase Dependencies
 
