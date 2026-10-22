@@ -9,3 +9,4 @@ dist-card/
 # Playwright MCP session files
 .playwright-mcp/
 site/favicon.svg
+screenshots/

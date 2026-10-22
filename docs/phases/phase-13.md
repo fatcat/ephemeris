@@ -23,6 +23,10 @@ Let the day and night card switch between the world map and a globe facing home.
 - **Shared, pulled out of the map:** night layers, key and description (`dayNightLayers.ts`),
   pins and sun dot (`MapPins.svelte`), a land loader that fetches the chunk once
   (`geo/land.ts`), and the map colors and grid styles, now on the card's figure.
+- **Single-file bundle (1.1.1).** HACS downloads only the release asset named after the
+  repository, so the land chunk from Phase 11 never reached HACS installs and the map had no
+  land. The land outline is now built into `ephemeris-cards.js`, and the release script
+  refuses a build with more than that one file.
 - **Play button shows pause while live.** Live time is moving, so the first press freezes the
   clock and the next plays through the day. "Now" goes back to live.
 
@@ -38,7 +42,8 @@ Let the day and night card switch between the world map and a globe facing home.
 | `src/ha-card/cards/dayNightConfig.ts` (+ test) | `view` option and editor field |
 | `src/ha-card/timeSelection.svelte.ts` (+ test), `components/TimeControls.svelte` | `moving`; pause while live |
 | `src/ha-card/dev/harness.ts` | A globe card |
-| `package.json` | `cardVersion` 1.1.0 |
+| `package.json` | `cardVersion` 1.1.0, then 1.1.1 |
+| `vite.card.config.ts`, `scripts/release-card.sh` | 1.1.1: one-file bundle, and a check for it |
 
 ## Acceptance Criteria
 
@@ -47,7 +52,8 @@ Let the day and night card switch between the world map and a globe facing home.
 - [x] Far-side people and sun dot hidden; Map | Globe switch works both ways
 - [x] Light and dark themes; 340 px card fits (the harness page itself scrolls 15 px with no cards)
 - [x] Play button shows pause while live; pressing it freezes, pressing again plays the day
-- [x] Bundle 130.8 KB, 38.7 KB gzipped (Phase 11: 36.0 KB); land chunk unchanged
+- [x] Bundle 163.0 KB, 49.3 KB gzipped, one file with the land outline inside (1.1.0: 38.7 KB plus a 9.8 KB chunk)
 - [x] `npm test` (122), `npm run check` pass; card lint clean
 - [ ] In HA: both views on a real dashboard, `view: globe` in the visual editor
 - [x] Released as cards v1.1.0
+- [ ] Released as cards v1.1.1 (land outline in the main file)

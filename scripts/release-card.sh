@@ -54,6 +54,8 @@ if ((!docs_only)); then
   npm run check
   EPHEMERIS_CARD_RELEASE=1 npm run build:card
   [[ -f dist-card/ephemeris-cards.js ]] || fail "The build made no dist-card/ephemeris-cards.js."
+  # HACS downloads only the release asset named after the repository
+  [[ "$(ls dist-card)" == "ephemeris-cards.js" ]] || fail "dist-card/ must hold only ephemeris-cards.js; HACS won't fetch other files."
 fi
 
 work=$(mktemp -d)

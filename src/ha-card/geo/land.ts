@@ -1,4 +1,4 @@
-/** The land outline chunk, fetched once however many cards or views use it */
+/** The land outline, parsed once however many cards or views use it */
 let land: Promise<string> | null = null;
 
 export function loadLand(): Promise<string> {
