@@ -34,11 +34,11 @@
       <button
         type="button"
         class="icon-button"
-        aria-label={selection.playing ? 'Pause' : 'Play the day'}
+        aria-label={selection.moving ? 'Pause' : 'Play the day'}
         onclick={() => selection.togglePlay(now, home.timeZone)}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          {#if selection.playing}
+          {#if selection.moving}
             <line x1="8" y1="5" x2="8" y2="19" />
             <line x1="16" y1="5" x2="16" y2="19" />
           {:else}

@@ -6,18 +6,24 @@ import { peopleFromHass } from './people.js';
 describe('parseDayNightConfig', () => {
   it('fills defaults', () => {
     expect(parseDayNightConfig({})).toEqual({
+      view: 'map',
       layers: ['twilight', 'tropics', 'sun'],
       centerLongitude: 0,
       markers: [],
     });
   });
 
+  it('takes the globe view', () => {
+    expect(parseDayNightConfig({ view: 'globe' }).view).toBe('globe');
+  });
+
   it('drops repeats', () => {
     const c = parseDayNightConfig({ layers: ['sun', 'sun'], markers: ['person.a', 'person.a'], center_longitude: -75 });
-    expect(c).toEqual({ layers: ['sun'], centerLongitude: -75, markers: ['person.a'] });
+    expect(c).toEqual({ view: 'map', layers: ['sun'], centerLongitude: -75, markers: ['person.a'] });
   });
 
   it.each([
+    [{ view: 'flat' }, '"view"'],
     [{ layers: 'sun' }, '"layers" must be a list'],
     [{ layers: ['clouds'] }, '"layers"'],
     [{ center_longitude: 200 }, '"center_longitude"'],

@@ -33,6 +33,7 @@ When a phase is complete, update the status below and in CLAUDE.md.
 | 10 | [Sky Dome Card](phase-10.md) | Complete | 2D sun-path chart, orientation toggle, solar panels |
 | 11 | [Day and Night Map Card](phase-11.md) | Complete | World map with twilight bands, people, wrap |
 | 12 | [HACS Packaging](phase-12.md) | Complete | Releases repository, release script, card version |
+| 13 | [Globe View on the Day and Night Card](phase-13.md) | In progress | Canvas globe facing home, Map/Globe switch |
 
 ## Phase Dependencies
 

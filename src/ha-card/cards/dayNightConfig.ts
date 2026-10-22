@@ -12,16 +12,21 @@ import { MAX_MARKERS, PERSON_ID } from './people.js';
 export const MAP_LAYERS = ['twilight', 'tropics', 'sun'] as const;
 export type MapLayer = (typeof MAP_LAYERS)[number];
 
+export const MAP_VIEWS = ['map', 'globe'] as const;
+export type MapView = (typeof MAP_VIEWS)[number];
+
 export interface DayNightConfig {
+  /** Which view the card opens with; the in-card toggle switches it */
+  view: MapView;
   layers: MapLayer[];
-  /** Longitude in the middle of the map; the map wraps around */
+  /** Longitude in the middle of the map; the map wraps around. The globe faces home. */
   centerLongitude: number;
   /** `person` entity ids to show where they are */
   markers: string[];
 }
 
 export function parseDayNightConfig(raw: Record<string, unknown>): DayNightConfig {
-  const { layers = [...MAP_LAYERS], center_longitude = 0, markers = [] } = raw;
+  const { view = 'map', layers = [...MAP_LAYERS], center_longitude = 0, markers = [] } = raw;
 
   if (!Array.isArray(layers)) throw new Error(`"layers" must be a list of: ${MAP_LAYERS.join(', ')}.`);
   const layerList = layers.map((l) => oneOf(l, MAP_LAYERS, 'layers'));
@@ -35,6 +40,7 @@ export function parseDayNightConfig(raw: Record<string, unknown>): DayNightConfi
   }
 
   return {
+    view: oneOf(view, MAP_VIEWS, 'view'),
     layers: [...new Set(layerList)],
     centerLongitude: inRange(center_longitude, -180, 180, '"center_longitude"'),
     markers: [...new Set(markers as string[])],
@@ -52,6 +58,18 @@ export const DAYNIGHT_INFO: Record<string, InfoDef> = {
 };
 
 export const DAYNIGHT_SCHEMA = [
+  {
+    name: 'view',
+    selector: {
+      select: {
+        mode: 'dropdown',
+        options: [
+          { value: 'map', label: 'World map' },
+          { value: 'globe', label: 'Globe facing home' },
+        ],
+      },
+    },
+  },
   {
     name: 'layers',
     selector: {
@@ -76,12 +94,14 @@ export const DAYNIGHT_SCHEMA = [
 ];
 
 export const DAYNIGHT_LABELS: Record<string, string> = {
+  view: 'Opens as',
   layers: 'Map layers',
   center_longitude: 'Map center longitude',
   markers: `People (up to ${MAX_MARKERS})`,
 };
 
 export const DAYNIGHT_HELPERS: Record<string, string> = {
-  center_longitude: '0 puts Greenwich in the middle. East is positive, so 150 centers on Australia.',
+  view: 'The card has a Map and Globe switch too.',
+  center_longitude: 'For the map. 0 puts Greenwich in the middle; east is positive, so 150 centers on Australia.',
   markers: 'Shown where their phone last reported a GPS position. Home is always shown.',
 };

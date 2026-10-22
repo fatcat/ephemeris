@@ -3,6 +3,9 @@
  *
  * After `resetAfter` seconds without interaction (and not playing), the card
  * snaps back to live. Playing steps the clock through the day.
+ *
+ * The play button pauses whenever time is moving: live counts as moving, so the
+ * first press freezes the clock and the next one plays through the day.
  */
 
 import { findEquinoxOrSolstice } from '../lib/astronomy/solar.js';
@@ -44,6 +47,11 @@ export class TimeSelection {
 
   get live(): boolean {
     return this.picked === null;
+  }
+
+  /** True while the clock runs, live or playing */
+  get moving(): boolean {
+    return this.live || this.playing;
   }
 
   /** The instant shown, given the current time and the home time zone */
@@ -92,12 +100,12 @@ export class TimeSelection {
   }
 
   togglePlay(now: Date, timeZone: string): void {
-    if (this.playing) {
+    if (this.moving) {
       this.stop();
+      this.picked ??= { day: 'today', minutes: this.minutes(now, timeZone) };
       this.#armReset();
       return;
     }
-    if (!this.picked) this.picked = { day: 'today', minutes: this.minutes(now, timeZone) };
     this.playing = true;
     clearTimeout(this.#resetTimer);
     this.#playTimer = setInterval(() => {
