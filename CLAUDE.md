@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **Phases 1 to 12 complete; Phase 13 (globe view on the day/night card) in progress.** Phases 9 to 13: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map, HACS packaging, globe). Releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
+> **Phases 1 to 13 complete.** Phases 9 to 13: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map, HACS packaging, globe). Releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
 >
 > See `docs/phases/README.md` for overall phase status.
 
