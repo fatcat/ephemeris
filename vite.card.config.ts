@@ -25,8 +25,9 @@ function landPath(): Plugin {
   };
 }
 
-// Home Assistant card bundle: one ES module HA loads as a dashboard resource,
-// plus the land outline as a chunk only the map card fetches. HA only fetches
+// Home Assistant card bundle: one ES module HA loads as a dashboard resource.
+// It has to be a single file: HACS downloads only the release asset named after
+// the repository, so a lazy chunk next to it would be missing. HA only fetches
 // the JS, so component CSS is injected by Svelte at runtime into each card's
 // shadow root.
 export default defineConfig({
@@ -44,8 +45,8 @@ export default defineConfig({
       fileName: () => 'ephemeris-cards.js',
     },
     rollupOptions: {
-      // Lazy chunks sit next to the main file: ephemeris-land-<hash>.js
-      output: { chunkFileNames: (c) => `${c.name.replace(/^_virtual_/, '')}-[hash].js` },
+      // The land outline's dynamic import stays in this file instead of a chunk
+      output: { inlineDynamicImports: true },
     },
   },
 });

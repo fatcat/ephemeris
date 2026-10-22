@@ -32,9 +32,8 @@ resource.
 
 ## Install by hand
 
-1. Download every `.js` file from the [latest release](https://github.com/fatcat/ephemeris-cards/releases/latest).
-   The map's land outline is a second file the main one loads, so keep them together.
-2. Copy them to `/config/www/ephemeris-cards/` on Home Assistant.
+1. Download `ephemeris-cards.js` from the [latest release](https://github.com/fatcat/ephemeris-cards/releases/latest).
+2. Copy it to `/config/www/ephemeris-cards/` on Home Assistant.
 3. Settings, Dashboards, three-dot menu, Resources, Add resource. URL
    `/local/ephemeris-cards/ephemeris-cards.js?v=1.0.0` (the release number), type
    "JavaScript module".

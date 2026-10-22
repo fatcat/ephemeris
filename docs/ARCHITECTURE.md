@@ -190,8 +190,8 @@ data, no time zone database.
   altitude is R·cos(lat − α), so each meridian's dark stretch has a closed form; for
   thresholds at or below 0° it is one stretch, and neighboring meridians join into polygons.
 - The land outline is made at build time: a Vite plugin turns `src/assets/geo/land.json` into
-  one rounded, relative SVG path (`virtual:ephemeris-land`). It ships as a separate chunk
-  that the map imports when it mounts, so the sky card never fetches it.
+  one rounded, relative SVG path (`virtual:ephemeris-land`). It is built into the bundle,
+  not a separate chunk: HACS downloads only the release file named after the repository.
 - The day/night card's globe view is a 2D canvas, not Three.js: each pixel is projected back
   to a latitude and longitude (`geo/orthographic.ts`), colored from an off-screen raster of
   the same land path, and shaded by the sun's altitude there. Map and globe share their night
