@@ -4,6 +4,7 @@
 #   npm run release:card                 # release v<cardVersion> from package.json
 #   npm run release:card -- notes.md     # with release notes from a file
 #   npm run release:card -- --dry-run    # check and build, publish nothing
+#   npm run release:card -- --docs-only  # only copy hacs/ and LICENSE over, no release
 #
 # Raise cardVersion and commit before running. Uses your gh login, which needs
 # push access to the cards repository.
@@ -12,10 +13,12 @@ set -euo pipefail
 cards_repo=fatcat/ephemeris-cards
 
 dry_run=0
+docs_only=0
 notes_in=
 for arg in "$@"; do
   case "$arg" in
     --dry-run) dry_run=1 ;;
+    --docs-only) docs_only=1 ;;
     -*) echo "Unknown option: $arg" >&2; exit 1 ;;
     *) notes_in=$(realpath "$arg") ;;
   esac
@@ -37,19 +40,21 @@ fail() {
 version=$(node -p "require('./package.json').cardVersion")
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "cardVersion in package.json must look like 1.2.3, not \"$version\"."
 tag="v$version"
-if gh release view "$tag" --repo "$cards_repo" >/dev/null 2>&1; then
+if ((!docs_only)) && gh release view "$tag" --repo "$cards_repo" >/dev/null 2>&1; then
   fail "$cards_repo already has $tag. Raise cardVersion in package.json."
 fi
 
 sha=$(git rev-parse HEAD)
 git fetch --quiet origin
-[[ -n "$(git branch -r --contains "$sha")" ]] || fail "Push this commit first, so the release can link to its source."
+[[ -n "$(git branch -r --contains "$sha")" ]] || fail "Push this commit first, so the cards repository can link to its source."
 source_repo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 
-npm test
-npm run check
-EPHEMERIS_CARD_RELEASE=1 npm run build:card
-[[ -f dist-card/ephemeris-cards.js ]] || fail "The build made no dist-card/ephemeris-cards.js."
+if ((!docs_only)); then
+  npm test
+  npm run check
+  EPHEMERIS_CARD_RELEASE=1 npm run build:card
+  [[ -f dist-card/ephemeris-cards.js ]] || fail "The build made no dist-card/ephemeris-cards.js."
+fi
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -71,10 +76,16 @@ files_changed=0
 git -C "$work/repo" diff --cached --quiet || files_changed=1
 
 echo
-echo "Release $tag of $cards_repo, from ${sha:0:7}"
-ls -l dist-card/*.js
+if ((docs_only)); then
+  echo "Files for $cards_repo, from ${sha:0:7}"
+else
+  echo "Release $tag of $cards_repo, from ${sha:0:7}"
+  ls -l dist-card/*.js
+fi
 if ((files_changed)); then
   git -C "$work/repo" status --short
+elif ((docs_only)); then
+  echo "Nothing to update."
 fi
 
 if ((dry_run)); then
@@ -87,4 +98,5 @@ if ((files_changed)); then
   git -C "$work/repo" commit --quiet -m "docs: update from $source_repo@${sha:0:7}"
   git -C "$work/repo" push --quiet origin HEAD:main
 fi
+((docs_only)) && exit 0
 gh release create "$tag" dist-card/*.js --repo "$cards_repo" --target main --title "$tag" --notes-file "$notes"

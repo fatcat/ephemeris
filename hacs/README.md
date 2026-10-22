@@ -7,6 +7,11 @@ Two Home Assistant dashboard cards that show what the sun is doing where you liv
 - `custom:ephemeris-daynight-card`: a world map or a globe facing your home, showing day,
   twilight and night right now, with your home and the people in your house.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/fatcat/ephemeris/main/docs/ephemeris%20cards%201.png" alt="Day and Night card: world map with twilight bands, home and the point where the sun is overhead" width="49%">
+  <img src="https://raw.githubusercontent.com/fatcat/ephemeris/main/docs/ephemeris%20cards%202.png" alt="Sky Dome card: the sun's path today and at the solstices and equinoxes, north up" width="49%">
+</p>
+
 Both use your Home Assistant home location, time zone and theme. The solar math runs in
 the browser, so the cards need no integration, sensor or internet service.
 
