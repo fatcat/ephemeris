@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ephemeris: Earth, Sun and Seasons</title>
+    <meta
+      name="description"
+      content="A free classroom app that shows why Earth has seasons: a 3D globe, a world map, an orrery and the sun's path across your sky, all driven by real solar math."
+    />
+    <meta property="og:title" content="Ephemeris: Earth, Sun and Seasons" />
+    <meta
+      property="og:description"
+      content="A free classroom app that shows why Earth has seasons, with a 3D globe, a world map and the sun's path across your sky."
+    />
+    <meta property="og:image" content="https://fatcat.github.io/ephemeris/img/preview.jpg" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <img class="logo" src="img/logo.jpg" width="900" height="720" alt="Ephemeris: Earth, Sun and Seasons" />
+      <p class="lead">
+        A free app for teaching kids (8 and up) why Earth has seasons. Spin the year forward and
+        watch daylight, the sun's path and the seasons change together.
+      </p>
+      <nav class="actions" aria-label="Get Ephemeris">
+        <a class="button primary" href="https://ephemeris.the-mcnultys.org/">Try it in your browser</a>
+        <a class="button" href="https://github.com/fatcat/ephemeris">Source on GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="wrap">
+        <img
+          class="shot"
+          src="img/app.webp"
+          width="1600"
+          height="1045"
+          alt="Ephemeris showing a 3D globe, a flat world map with day and night, the orrery and the sky dome, with time and location controls on the right"
+        />
+      </section>
+
+      <section class="wrap">
+        <h2>One place, three days of the year</h2>
+        <p class="intro">
+          The same place at the June solstice, the March equinox and the December solstice. Earth's
+          23.4° tilt never changes direction, so as Earth goes around the sun, first one hemisphere
+          and then the other leans toward it.
+        </p>
+        <div class="seasons">
+          <figure>
+            <a href="img/june-solstice.webp">
+              <img
+                src="img/june-solstice.webp"
+                width="600"
+                height="908"
+                loading="lazy"
+                alt="June solstice: the world map with daylight over the whole Arctic, and the sky dome with today's sun path high and long"
+              />
+            </a>
+            <figcaption>
+              <strong>June solstice:</strong> 14 h 22 m of daylight. The Arctic stays lit all day
+              and the sun climbs high.
+            </figcaption>
+          </figure>
+          <figure>
+            <a href="img/equinox.webp">
+              <img
+                src="img/equinox.webp"
+                width="600"
+                height="908"
+                loading="lazy"
+                alt="March equinox: the world map with day and night split from pole to pole, and the sun path rising due east"
+              />
+            </a>
+            <figcaption>
+              <strong>March equinox:</strong> 12 h 08 m. Day and night run straight from pole to pole,
+              and the sun rises due east.
+            </figcaption>
+          </figure>
+          <figure>
+            <a href="img/december-solstice.webp">
+              <img
+                src="img/december-solstice.webp"
+                width="600"
+                height="908"
+                loading="lazy"
+                alt="December solstice: the world map with the Arctic in darkness, and the sky dome with today's sun path low and short"
+              />
+            </a>
+            <figcaption>
+              <strong>December solstice:</strong> 9 h 56 m. The Arctic is dark all day and the sun
+              stays low in the south.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="wrap">
+        <h2>What's in it</h2>
+        <ul class="features">
+          <li><strong>Globe and world map</strong> with day, twilight and night, kept in step.</li>
+          <li><strong>Orrery</strong> showing Earth's orbit, its tilt and where the solstices fall.</li>
+          <li><strong>Sky dome</strong> tracing the sun's path across your sky, today and at the solstices and equinoxes.</li>
+          <li><strong>Sundial</strong> for reading solar time.</li>
+          <li><strong>Time controls:</strong> sweep smoothly through the year or step a day at a time.</li>
+          <li><strong>Sun data</strong> for any place: sunrise, sunset, day length, elevation and azimuth.</li>
+          <li><strong>Change Earth's tilt</strong> from 0° to 90° and see what seasons would look like.</li>
+          <li><strong>Works offline</strong> once loaded, so a weak school network won't stop a lesson.</li>
+        </ul>
+        <p class="note">
+          The sun's position comes from Jean Meeus's astronomical algorithms, accurate for 200 years
+          either side of today. Maps use public domain Natural Earth data.
+        </p>
+      </section>
+
+      <section class="wrap">
+        <h2>Home Assistant cards</h2>
+        <p>
+          Two dashboard cards bring the same solar math to Home Assistant: the sun's path across your
+          sky (with solar panels if you have them) and a live world map of day and night with the
+          people in your house. Install them through HACS from
+          <a href="https://github.com/fatcat/ephemeris-cards">fatcat/ephemeris-cards</a>.
+        </p>
+      </section>
+
+      <section class="wrap">
+        <h2>Run your own</h2>
+        <p>
+          Ephemeris is a static web app that runs in Docker, so a school can host its own copy.
+          Setup, HTTPS and updates are in the
+          <a href="https://github.com/fatcat/ephemeris#installation">README</a>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <p>
+        MIT licensed. Made by
+        <a href="https://github.com/fatcat">fatcat</a>.
+      </p>
+    </footer>
+  </body>
+</html>

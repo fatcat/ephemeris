@@ -4,6 +4,8 @@ Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a 
 
 Demo here: [https://ephemeris.the-mcnultys.org/](https://ephemeris.the-mcnultys.org/)
 
+Project page: [https://fatcat.github.io/ephemeris/](https://fatcat.github.io/ephemeris/)
+
 # Features
 
 - 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using <a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank">Jean Meeus</a> algorithms
