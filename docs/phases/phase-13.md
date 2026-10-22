@@ -23,10 +23,11 @@ Let the day and night card switch between the world map and a globe facing home.
 - **Shared, pulled out of the map:** night layers, key and description (`dayNightLayers.ts`),
   pins and sun dot (`MapPins.svelte`), a land loader that fetches the chunk once
   (`geo/land.ts`), and the map colors and grid styles, now on the card's figure.
-- **Single-file bundle (1.1.1).** HACS downloads only the release asset named after the
-  repository, so the land chunk from Phase 11 never reached HACS installs and the map had no
-  land. The land outline is now built into `ephemeris-cards.js`, and the release script
-  refuses a build with more than that one file.
+- **Single-file bundle (1.1.1).** The land outline is now built into `ephemeris-cards.js`,
+  so an install is one file, and the release script refuses a build with more. The map with
+  no land in HA that prompted this was not HACS: HACS downloads every asset of a release. An
+  old `/local/ephemeris/` 1.0.0 resource was still in `.storage/lovelace_resources`, loaded
+  first and claimed the cards, and its land file was gone. Removing it fixed the card.
 - **Play button shows pause while live.** Live time is moving, so the first press freezes the
   clock and the next plays through the day. "Now" goes back to live.
 

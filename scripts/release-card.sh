@@ -54,8 +54,8 @@ if ((!docs_only)); then
   npm run check
   EPHEMERIS_CARD_RELEASE=1 npm run build:card
   [[ -f dist-card/ephemeris-cards.js ]] || fail "The build made no dist-card/ephemeris-cards.js."
-  # HACS downloads only the release asset named after the repository
-  [[ "$(ls dist-card)" == "ephemeris-cards.js" ]] || fail "dist-card/ must hold only ephemeris-cards.js; HACS won't fetch other files."
+  # The bundle is meant to be one file (vite.card.config.ts); the install docs say so
+  [[ "$(ls dist-card)" == "ephemeris-cards.js" ]] || fail "dist-card/ must hold only ephemeris-cards.js; the install docs assume one file."
 fi
 
 work=$(mktemp -d)

@@ -26,10 +26,9 @@ function landPath(): Plugin {
 }
 
 // Home Assistant card bundle: one ES module HA loads as a dashboard resource.
-// It has to be a single file: HACS downloads only the release asset named after
-// the repository, so a lazy chunk next to it would be missing. HA only fetches
-// the JS, so component CSS is injected by Svelte at runtime into each card's
-// shadow root.
+// Kept to a single file so a manual install is one file to copy and a release
+// is one asset. HA only fetches the JS, so component CSS is injected by Svelte
+// at runtime into each card's shadow root.
 export default defineConfig({
   publicDir: false,
   plugins: [svelte({ compilerOptions: { css: 'injected' } }), landPath()],
