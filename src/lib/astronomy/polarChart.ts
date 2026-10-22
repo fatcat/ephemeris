@@ -9,7 +9,7 @@ import type { SkyPoint } from './sunPath.js';
 
 /**
  * - `north_up`: the standard sun-path chart, north at the top and east on the right
- *   (a map of the sky seen from below, in both hemispheres).
+ *   (seen from above, like a map of the ground, in both hemispheres).
  * - `facing_sun`: standing with your back to the pole, looking at the equator-side sky.
  *   In the northern hemisphere that's a 180° turn of `north_up`; in the southern it is
  *   `north_up` already. Always a rotation, never a mirror, so it matches the app's dome.
