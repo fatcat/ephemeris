@@ -113,3 +113,43 @@ export function seasonalPaths(
     return { id, date, points: sunPathForDay(date, latDeg, lonDeg, obliquityDeg) };
   });
 }
+
+/** Display names for the seasonal paths */
+export const SEASONAL_PATH_NAMES: Record<SeasonalPathId, string> = {
+  juneSolstice: 'June solstice',
+  marchEquinox: 'Equinoxes',
+  decemberSolstice: 'December solstice',
+};
+
+/** Legend text for a seasonal path, noting when the sun doesn't rise that day */
+export function seasonalPathLabel(id: SeasonalPathId, info: SeasonalPathInfo): string {
+  return info.rises ? SEASONAL_PATH_NAMES[id] : `${SEASONAL_PATH_NAMES[id]} (sun never rises)`;
+}
+
+/** How a path relates to the observer's seasons: the higher solstice is summer */
+export type PathRole = 'summer' | 'winter' | 'equinox';
+
+export interface SeasonalPathInfo {
+  role: PathRole;
+  /** False when the sun never rises that day (polar night) */
+  rises: boolean;
+}
+
+/** Solstice peaks closer than this count as equal: no seasons (axial tilt near 0). */
+const NO_SEASON_EPSILON_DEG = 0.5;
+
+/** Color role and visibility of each seasonal path */
+export function seasonalPathInfo(paths: SeasonalPath[]): Record<SeasonalPathId, SeasonalPathInfo> {
+  const peak = (id: SeasonalPathId) =>
+    (paths.find((s) => s.id === id)?.points ?? []).reduce((m, p) => Math.max(m, p.elevation), -90);
+  const diff = peak('juneSolstice') - peak('decemberSolstice');
+  const noSeasons = Math.abs(diff) < NO_SEASON_EPSILON_DEG;
+  const roleOf: Record<SeasonalPathId, PathRole> = {
+    juneSolstice: noSeasons ? 'equinox' : diff > 0 ? 'summer' : 'winter',
+    marchEquinox: 'equinox',
+    decemberSolstice: noSeasons ? 'equinox' : diff > 0 ? 'winter' : 'summer',
+  };
+  return Object.fromEntries(
+    paths.map((s) => [s.id, { role: roleOf[s.id], rises: s.points.length > 1 }]),
+  ) as Record<SeasonalPathId, SeasonalPathInfo>;
+}

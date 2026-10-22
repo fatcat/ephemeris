@@ -323,6 +323,16 @@ function equationOfTime(date: Date, customObliquityDeg?: number): number {
   return eot * (720 / Math.PI); // radians to minutes
 }
 
+/** Standard sunrise/sunset altitude: refraction plus the solar disc's radius */
+export const SUNRISE_ALTITUDE_DEG = -0.833;
+
+export interface SunTimes {
+  sunrise: Date | null;
+  sunset: Date | null;
+  solarNoon: Date;
+  dayLength: number;
+}
+
 /**
  * Compute sunrise, sunset, solar noon, day length for a given date and location.
  * Uses the standard -0.833° correction for atmospheric refraction + solar disc.
@@ -332,12 +342,22 @@ export function sunriseSunset(
   latDeg: number,
   lonDeg: number,
   customObliquityDeg?: number,
-): {
-  sunrise: Date | null;
-  sunset: Date | null;
-  solarNoon: Date;
-  dayLength: number;
-} {
+): SunTimes {
+  return sunTimesForAltitude(date, latDeg, lonDeg, SUNRISE_ALTITUDE_DEG, customObliquityDeg);
+}
+
+/**
+ * When the sun crosses `altitudeDeg` going up (`sunrise`) and down (`sunset`) on
+ * the UTC calendar day of `date`. -6 gives civil dawn and dusk, +6 the golden hour.
+ * `dayLength` is the hours spent above that altitude: 24 or 0 when it never crosses.
+ */
+export function sunTimesForAltitude(
+  date: Date,
+  latDeg: number,
+  lonDeg: number,
+  altitudeDeg: number,
+  customObliquityDeg?: number,
+): SunTimes {
   // Work with the same calendar day at noon UTC for stable calculations
   const noon = new Date(Date.UTC(
     date.getUTCFullYear(),
@@ -355,9 +375,9 @@ export function sunriseSunset(
   const midnightUtc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
   const solarNoonDate = new Date(midnightUtc + solarNoonMinutes * 60000);
 
-  // Hour angle at sunrise/sunset
-  // cos(HA) = (sin(-0.833°) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))
-  const sinCorr = Math.sin(-0.833 * DEG_TO_RAD);
+  // Hour angle at the crossing
+  // cos(HA) = (sin(alt) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))
+  const sinCorr = Math.sin(altitudeDeg * DEG_TO_RAD);
   const denominator = Math.cos(lat) * Math.cos(declination);
 
   if (Math.abs(denominator) < 1e-10) {

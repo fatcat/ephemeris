@@ -2,7 +2,10 @@
 
 Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a Progressive Web App for classroom use with kids ages 8+. This app is suitably accurate for classroom study of the natural effect of Earth's axial tilt (obliquity). It will become inaccurate in simulations exceeding +-200 years.
 
-# Features 
+Demo here: [https://ephemeris.the-mcnultys.org/](https://ephemeris.the-mcnultys.org/)
+
+# Features
+
 - 3D globe and synchronized equirectangular projection showing the day/night terminator, computed from the sun's position using <a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank">Jean Meeus</a> algorithms
 - Includes time controls (smooth sweep and day-snap modes)
 - Geographic overlays (coastlines, rivers, lakes)
@@ -19,6 +22,7 @@ Interactive 3D visualization of Earth's day/night cycle and seasons. Built as a 
 Use these instructions if this is a new install of the application.
 
 ### With Docker Compose
+
 ```bash
 git clone https://github.com/fatcat/ephemeris.git
 cd ephemeris
@@ -26,6 +30,7 @@ docker compose --build
 ```
 
 ### With Docker
+
 ```bash
 git clone https://github.com/fatcat/ephemeris.git
 docker build -t ephemeris .
@@ -55,6 +60,7 @@ docker run -p 8181:8080 -p 8443:8443 -v ./certs:/certs:ro ephemeris
 ```
 
 ### Shutdown
+
 ```bash
 # With Docker Compose
 docker compose down
@@ -78,6 +84,7 @@ The included `generate-certs.sh` script creates a local Certificate Authority (C
 ```
 
 This creates three files in `./certs/`:
+
 - `ca.crt` — the CA certificate (install this on client devices)
 - `server.crt` — the server certificate
 - `server.key` — the server private key
@@ -135,15 +142,18 @@ See Apple's documentation on [installing a CA certificate on Mac](https://suppor
 If you have a domain name and want real certificates (no CA installation needed on clients), replace the self-signed certs with ones from a public CA like [Let's Encrypt](https://letsencrypt.org/).
 
 1. Obtain a certificate and key for your domain. With [certbot](https://certbot.eff.org/):
+
    ```bash
    sudo certbot certonly --standalone -d yourdomain.example.com
    ```
 2. Copy the certificate and key into the `./certs/` directory:
+
    ```bash
    cp /etc/letsencrypt/live/yourdomain.example.com/fullchain.pem ./certs/server.crt
    cp /etc/letsencrypt/live/yourdomain.example.com/privkey.pem ./certs/server.key
    ```
 3. Start or restart the container:
+
    ```bash
    docker compose up -d
    ```
@@ -188,6 +198,7 @@ docker compose exec ephemeris nginx -s reload
 With plain `docker run`, add `-v ./njs/ban-config.json:/etc/nginx/njs/ban-config.json:ro` to tune it, or just rebuild after editing.
 
 Worth knowing:
+
 - njs bans at the HTTP layer. The connection is accepted and then rejected. fail2ban is the layer that drops traffic at the firewall.
 - njs ban state lives in memory. A container restart clears current njs bans. fail2ban bans persist.
 - Banning counts bad paths, not traffic volume. A classroom behind one shared IP never trips it, because real users never request scanner paths.
@@ -211,6 +222,7 @@ sudo ./setup.sh cancel-deadman
 ```
 
 Requirements:
+
 - `fail2ban`, `nftables`, and `at` installed on the host.
 - An existing nftables `inet firewall` table with a `fail2ban` set. The action adds banned IPs to it, and the firewall checks it for both direct and container-forwarded traffic so Docker-proxied requests are dropped too.
 - The host log dir `/var/log/ephemeris` must be writable by the container's nginx user. The container writes its access log there and fail2ban reads it. If ownership is wrong, nginx cannot write the log, the log stays empty, and nothing ever bans. Chown it to the nginx uid (usually 101) and use `copytruncate` in logrotate so rotation does not cut the log feed.
@@ -227,6 +239,32 @@ awk '{print $1}' /var/log/ephemeris/access.log | sort | uniq -c | sort -rn | hea
 
 Real public IPs mean you are set. One `172.x` address for everything means you must fix this before relying on either ban layer. Set `userland-proxy: false` in the Docker daemon config, or use host networking. If a reverse proxy sits in front, forward the real client IP and configure nginx `real_ip` so `$remote_addr` is the true client.
 
+# Home Assistant cards
+
+Two dashboard cards built from the same solar math: `custom:ephemeris-sky-card` (the sun's
+path across your sky) and `custom:ephemeris-daynight-card` (a world day and night map).
+Install them with HACS from [fatcat/ephemeris-cards](https://github.com/fatcat/ephemeris-cards).
+Install steps and card options are in [hacs/README.md](hacs/README.md), which is that
+repository's README.
+
+## Test a build in Home Assistant
+
+`npm run build:card` builds `dist-card/`. With an SSH add-on running,
+`HA_DEPLOY_TARGET=root@homeassistant.local:/config/www/ephemeris npm run deploy:card`
+builds and copies it in one step, then prints the resource URL to add (JavaScript module).
+Remove the HACS resource while testing, or both copies load and the first one registers
+the cards.
+
+## Release
+
+1. Raise `cardVersion` in `package.json` and commit. Push the commit.
+2. `npm run release:card` (add `-- notes.md` for release notes, or `-- --dry-run` to stop
+   before anything is published).
+
+The script checks the tree is clean and the commit is pushed, runs the tests and type
+check, builds, copies `hacs/README.md`, `hacs/hacs.json` and `LICENSE` to the cards
+repository, then creates release `v<cardVersion>` there with the built `.js` files. It uses
+your `gh` login.
 
 # Development
 
@@ -237,12 +275,15 @@ Real public IPs mean you are set. One `172.x` address for everything means you m
 - Vite + vite-plugin-pwa
 
 ## Run, build and test
+
 ```bash
 npm install
 npm run dev          # dev server with HMR
 npm run build        # production build
 npm run check        # type checking (svelte-check)
 npm run lint         # eslint
+npm test             # unit tests (Vitest)
+npm run dev:card     # Home Assistant card harness
 ```
 
 ## How the image works
@@ -273,5 +314,6 @@ docker build -t ephemeris .   # rebuild the image
 No external data is fetched at runtime. All textures, timezone data, and solar algorithms are bundled at build time. Rebuilding the image a couple of times per year is sufficient to stay current.
 
 ## License
+
 Code is MIT.
 All textures and geographic data are public domain (Natural Earth, NASA).

@@ -4,3 +4,7 @@ dev-dist/
 .vite/
 *.local
 certs/*
+dist-card/
+
+# Playwright MCP session files
+.playwright-mcp/

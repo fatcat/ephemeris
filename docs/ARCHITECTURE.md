@@ -164,3 +164,35 @@ Data is converted from Shapefile/GeoJSON to a compact format at build time and b
 - All textures are equirectangular projection
 - Compressed as WebP with PNG fallback
 - Total texture payload: ~5MB
+
+## Home Assistant Cards
+
+A second Vite build (`vite.card.config.ts`) bundles `src/ha-card/` into one ES module,
+`dist-card/ephemeris-cards.js`, that registers the Ephemeris dashboard cards. The cards
+reuse `src/lib/astronomy/` and nothing else from the app: no Three.js, no stores, no place
+data, no time zone database.
+
+- `defineCard.ts` builds each card's custom element from a small description (type, default
+  title and info boxes, Svelte component, sizes). The element implements HA's card API,
+  validates config, reads the home context from `hass`, and ticks `now` once a minute while
+  the page is visible. HA sets `hass` on every state change anywhere, so the element compares
+  the few fields it uses and ignores the rest.
+- The element mounts a Svelte tree into its shadow root and passes one reactive `CardState`.
+  Svelte injects component CSS into that shadow root. Colors come from HA's theme variables.
+- `CardShell.svelte` lays out header, chart (a snippet each card supplies), info boxes and
+  time controls. `TimeSelection` owns live vs picked time, play and snap-back.
+- Time zones use Intl only: `zonedToUtc` turns a wall-clock time in HA's zone into an instant.
+- `info.ts` maps info box ids to labels and pure value functions. Cards can add their own ids.
+- `card-dev.html` runs the real bundle entry against a mock `hass` for Playwright checks.
+- Cards that need more of `hass` than the home location supply `fromHass`. Its result is
+  compared as JSON, so the map card only re-renders when a watched person moves.
+- The day/night map draws `daylightRegions.ts` output as SVG. Along a meridian the sun's
+  altitude is R·cos(lat − α), so each meridian's dark stretch has a closed form; for
+  thresholds at or below 0° it is one stretch, and neighboring meridians join into polygons.
+- The land outline is made at build time: a Vite plugin turns `src/assets/geo/land.json` into
+  one rounded, relative SVG path (`virtual:ephemeris-land`). It ships as a separate chunk
+  that the map imports when it mounts, so the sky card never fetches it.
+- Releases for HACS go to a separate repository, `fatcat/ephemeris-cards`, which holds no
+  source. `scripts/release-card.sh` copies `hacs/` (its README and `hacs.json`) there and
+  attaches the built `.js` files to a GitHub release. `cardVersion` in `package.json` is the
+  card version, separate from the app's.

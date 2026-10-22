@@ -10,7 +10,7 @@ The app runs as a Progressive Web App — connection to a server is required onl
 
 ## Current Phase
 
-> **All phases complete** (Phase 8, Sky Dome view, added 2026-10-19).
+> **Phases 1 to 12 complete.** Phases 9 to 12: Home Assistant cards in `src/ha-card/` (foundation, sky card, day/night map, HACS packaging). Releases go to `fatcat/ephemeris-cards` via `npm run release:card`.
 >
 > See `docs/phases/README.md` for overall phase status.
 
@@ -33,7 +33,19 @@ npm run build        # production build
 npm run preview      # preview production build locally
 npm run lint         # run linter
 npm run check        # svelte-check (type checking)
+npm test             # Vitest, single run
+npm run build:card   # Home Assistant card bundle → dist-card/ephemeris-cards.js
+npm run dev:card     # card harness at /card-dev.html (mock hass)
+HA_DEPLOY_TARGET=root@host:/config/www/ephemeris npm run deploy:card
+npm run release:card # HACS release to fatcat/ephemeris-cards (see README)
 ```
+
+## Testing
+
+`npm test` runs Vitest once (`vitest run`). Tests sit next to their code as `*.test.ts`.
+They cover the card zone math, formatting, `hass` parsing, config validation, info box
+known answers and the snap-back timer. UI changes still get a Playwright check: the app via
+`npm run dev`, the cards via `npm run dev:card`.
 
 ## Architecture
 
