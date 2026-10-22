@@ -55,6 +55,6 @@ Let the day and night card switch between the world map and a globe facing home.
 - [x] Play button shows pause while live; pressing it freezes, pressing again plays the day
 - [x] Bundle 163.0 KB, 49.3 KB gzipped, one file with the land outline inside (1.1.0: 38.7 KB plus a 9.8 KB chunk)
 - [x] `npm test` (122), `npm run check` pass; card lint clean
-- [ ] In HA: both views on a real dashboard, `view: globe` in the visual editor
+- [x] In HA: both views on a real dashboard (v1.1.1), one copy loaded, pause while live
 - [x] Released as cards v1.1.0
 - [x] Released as cards v1.1.1 (land outline in the main file)
