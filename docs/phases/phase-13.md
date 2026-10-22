@@ -50,4 +50,4 @@ Let the day and night card switch between the world map and a globe facing home.
 - [x] Bundle 130.8 KB, 38.7 KB gzipped (Phase 11: 36.0 KB); land chunk unchanged
 - [x] `npm test` (122), `npm run check` pass; card lint clean
 - [ ] In HA: both views on a real dashboard, `view: globe` in the visual editor
-- [ ] Released as cards v1.1.0
+- [x] Released as cards v1.1.0

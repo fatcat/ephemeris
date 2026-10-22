@@ -268,6 +268,9 @@ the cards.
 2. `npm run release:card` (add `-- notes.md` for release notes, or `-- --dry-run` to stop
    before anything is published).
 
+To update only the cards repository's README and `hacs.json`, without a release, commit and
+push, then run `npm run release:card -- --docs-only`.
+
 The script checks the tree is clean and the commit is pushed, runs the tests and type
 check, builds, copies `hacs/README.md`, `hacs/hacs.json` and `LICENSE` to the cards
 repository, then creates release `v<cardVersion>` there with the built `.js` files. It uses
